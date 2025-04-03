@@ -34,31 +34,38 @@ SWEP.Primary.ClipSize       = 1
 SWEP.Primary.DefaultClip    = 1
 SWEP.Primary.Ammo           = "RPG_Round"
 SWEP.Primary.Automatic      = false
-SWEP.Primary.Delay          = 0.2
+SWEP.Primary.Delay          = 1
 
-SWEP.Caliber                = 100 -- mm diameter of bullet
-SWEP.ACFProjMass            = 1.587 -- kg of projectile
-SWEP.FillerMass				= 0.720
-SWEP.ACFType                = "HEAT"
-SWEP.ACFMuzzleVel           = 100 -- m/s of bullet leaving the barrel
-SWEP.ACFProjLen				= 50
-SWEP.Tracer                 = 0
+// you can get this data by typing "acf_sweps_getDataFromAmmo" in console while looking at a GLATGM ammo box
+// calibers lower than 100mm do not suffer from horrible inaccuracy
 
--- I hate how inaccessible this is
-SWEP.ACFHEATDetAngle		= 45
-SWEP.ACFHEATStandoff		= 0.0441
-SWEP.ACFHEATLinerMass		= 0.281
-SWEP.ACFHEATPropMass		= 0.000268
-SWEP.ACFHEATCartMass		= 1.1637
-SWEP.ACFHEATCasingMass		= 0.6186
--- I mean what the actual fuck, why can't I just call a single function to build this fucking data
-SWEP.ACFHEATJetMass			= 0.15
-SWEP.ACFHEATJetMinVel		= 4046.0413
-SWEP.ACFHEATJetMaxVel		= 8323.0988
-SWEP.ACFHEATBoomFillerMass	= 0.1936
-SWEP.ACFHEATRoundVolume		= 565.4867
-SWEP.ACFHEATBreakupDist		= 0.5182536
-SWEP.ACFHEATBreakupTime		= 6.2266906091528e-05
+// copy paste values that the command puts in console to replace these to make your own custom thing
+
+SWEP.ACFHEATStandoff = 0.0062481986417478
+SWEP.ACFHEATBreakupDist = 0.13888488012627
+SWEP.ACFHEATJetMass = 0.21111592232944
+SWEP.Caliber = 63
+SWEP.Tracer = 0
+SWEP.ACFHEATBreakupTime = 2.6718201950522e-05
+SWEP.ACFType = "GLATGM"
+SWEP.LimitVel = 100
+SWEP.ACFHEATCartMass = 4.0919797362672
+SWEP.ACFHEATBoomFillerMass = 0.69887141551432
+SWEP.ACFHEATRoundVolume = 1571.0916365043
+SWEP.ACFHEATLinerMass = 1
+SWEP.ACFHEATJetMinVel = 1919.3566600685
+SWEP.ACFHEATJetMaxVel = 5198.1372243337
+SWEP.ACFProjMass = 4.0327520753672
+SWEP.ACFHEATPropMass = 0.059227660899965
+SWEP.ACFMuzzleVel = 177.69727130359
+SWEP.FillerMass = 1.3614378224305
+SWEP.ACFHEATCasingMass = 1.9239278892978
+
+// END OF COPY PASTE DATA
+
+SWEP.ACFMuzzleVel = 50
+SWEP.LimitVel = 75
+SWEP.BurnDuration = 0.5
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0
@@ -89,7 +96,7 @@ SWEP.FakeFire				= true	-- This shakes the aim bloom so you can't just quickshot
 SWEP.MoveBloom				= 2
 
 SWEP.Scope					= true
-SWEP.HasDropCalc			= true
+SWEP.HasDropCalc			= false
 SWEP.Zoom					= 2
 SWEP.Recovery				= 1
 
@@ -98,6 +105,8 @@ SWEP:SetupACFBullet()
 function SWEP:PrimaryAttack()
 	if not self:CanPrimaryAttack() then return end
 	local Ply = self:GetOwner()
+	if not Ply:IsOnGround() then return end
+	if Ply:GetVelocity():Length() > 20 then return end
 
 	
 	local AimMod = self:GetAimMod()
@@ -117,33 +126,39 @@ function SWEP:PrimaryAttack()
 		--self:ShootBullet(Ply:GetShootPos(),(Dir:Angle() + Angle(self.AimTable[self:GetNW2Int("aimsetting",1)].PitchAdjust,0,0)):Forward())
 
 		local BulletData = {
-			MuzzleVel = self.ACFMuzzleVel, 
-			Caliber = self.Caliber / 10, 
-			Pos = Ply:GetShootPos() + Ply:GetAimVector() * 25, 
-			ProjMass = self.ACFProjMass, 
-			PropMass = self.ACFHEATPropMass,
-			Flight = Ply:GetAimVector(),
-			Speed = self.MuzzleVel,
-			Filter = {Ply:GetEyeTrace().Filter},
-			DragCoef = ((3.1416 * (self.Caliber/2)^2)/10000)/self.ACFProjMass,
-			CartMass = self.ACFHEATCartMass,
-			Type = self.ACFType,
-			FillerMass = self.FillerMass,
-			BoomFillerMass = self.ACFHEATBoomFillerMass,
-			CasingMass = self.ACFHEATCasingMass,
-			DetAngle = self.ACFHEATDetAngle,
-			Standoff = self.ACFHEATStandoff,
-			LinerMass = self.ACFHEATLinerMass,
+			MuzzleVel 		= self.ACFMuzzleVel, 
+			Caliber 		= self.Caliber, 
+			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * 10, 
+			ProjMass 		= self.ACFProjMass, 
+			PropMass 		= self.ACFHEATPropMass,
+			Flight 			= Dir,
+			Speed 			= self.MuzzleVel,
+			Filter 			= {},
+			DragCoef 		= ((3.1416 * (self.Caliber / 2) ^ 2) / 10000) / self.ACFProjMass,
+			CartMass 		= self.ACFHEATCartMass,
+			Type 			= self.ACFType,
+			FillerMass 		= self.FillerMass,
+			BoomFillerMass 	= self.ACFHEATBoomFillerMass,
+			CasingMass 		= self.ACFHEATCasingMass,
+			DetonatorAngle 	= self.ACFHEATDetAngle,
+			Standoff 		= self.ACFHEATStandoff,
+			LinerMass 		= self.ACFHEATLinerMass,
 
-			JetMass = self.ACFHEATJetMass,
-			JetMinVel = self.ACFHEATJetMinVel,
-			JetMaxVel = self.ACFHEATJetMaxVel,
-			RoundVolume = self.ACFHEATRoundVolume,
-			BreakupDist = self.ACFHEATBreakupDist,
-			BreakupTime = self.ACFHEATBreakupTime,
+			JetMass 		= self.ACFHEATJetMass,
+			JetMinVel 		= self.ACFHEATJetMinVel,
+			JetMaxVel 		= self.ACFHEATJetMaxVel,
+			RoundVolume 	= self.ACFHEATRoundVolume,
+			BreakupDist 	= self.ACFHEATBreakupDist,
+			BreakupTime 	= self.ACFHEATBreakupTime,
+
+			LimitVel 		= self.LimitVel,
+			BurnDuration 	= self.BurnDuration,
+
+			Diameter 		= Caliber,
+			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
 		}
 
-		local missile = MakeACF_GLATGM(self, BulletData)
+		local missile = MakeACF_SWEPATGM(self, BulletData)
 	else
 		self:Recoil(Punch)
 	end
