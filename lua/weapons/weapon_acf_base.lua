@@ -120,89 +120,6 @@ SWEP.Reloading				= false
 SWEP.IconOverride			= "materials/acf_logo.png"
 local FiremodeSound = Sound("Weapon_SMG1.Special2")
 
-function MakeACF_SWEPATGM(Gun, BulletData)
-	local Entity = ents.Create("acf_glatgm")
-
-	if not IsValid(Entity) then return end
-
-	local Velocity = math.Clamp(BulletData.MuzzleVel / ACF.Scale, 200, 1600)
-	local Caliber  = BulletData.Caliber
-	local Owner    = Gun.Owner
-
-	Entity:SetAngles(Gun:GetAngles())
-	Entity:SetPos(BulletData.Pos)
-	Entity:CPPISetOwner(Owner)
-	Entity:SetPlayer(Owner)
-	Entity:Spawn()
-
-	if Caliber >= 140 then
-		Entity:SetModel("models/missiles/glatgm/mgm51.mdl")
-		Entity:SetModelScale(Caliber / 150, 0)
-	elseif Caliber >= 120 then
-		Entity:SetModel("models/missiles/glatgm/9m112.mdl")
-		Entity:SetModelScale(Caliber / 125, 0)
-	else
-		Entity:SetModel("models/missiles/glatgm/9m117.mdl")
-		Entity:SetModelScale(Caliber * 0.01, 0)
-	end
-
-	Entity:PhysicsInit(SOLID_VPHYSICS)
-	Entity:SetMoveType(MOVETYPE_VPHYSICS)
-
-	ParticleEffectAttach("Rocket Motor GLATGM", 4, Entity, 1)
-
-	Entity.Owner        = Gun.Owner
-	Entity.Name         = Caliber .. "mm Gun Launched Missile"
-	Entity.ShortName    = Caliber .. "mmGLATGM"
-	Entity.EntType      = "Gun Launched Anti-Tank Guided Missile"
-	Entity.Caliber      = Caliber
-	Entity.Weapon       = Gun
-	Entity.BulletData   = table.Copy(BulletData)
-	Entity.ForcedArmor  = 5 -- All missiles should get 5mm
-	Entity.ForcedMass   = BulletData.CartMass
-	Entity.UseGuidance  = true
-	Entity.ViewCone     = math.cos(math.rad(50)) -- Number inside is on degrees
-	Entity.KillTime     = CurTime() + 20
-	Entity.GuideDelay   = CurTime() + 0.25 -- Missile won't be guided for the first quarter of a second
-	Entity.LastThink    = CurTime()
-	Entity.Filter       = Entity.BulletData.Filter
-	Entity.Agility      = 50 -- Magic multiplier that controls the agility of the missile
-	Entity.IsSubcaliber = false -- just set this to false because its a handheld and the rockets are gonna be small
-	Entity.LaunchVel    = math.Round(Velocity * 0.2, 2) * 39.37
-	Entity.DiffVel      = math.Round(Velocity * 0.5, 2) * 39.37 - Entity.LaunchVel
-	Entity.AccelLength  = BulletData.BurnDuration
-	Entity.AccelTime    = Entity.LastThink + Entity.AccelLength
-	Entity.Speed        = Entity.LaunchVel
-	Entity.SpiralRadius = Entity.IsSubcaliber and 120 / Caliber or nil
-	Entity.SpiralSpeed  = Entity.IsSubcaliber and 360 / Entity.AccelLength or nil
-	Entity.SpiralAngle  = Entity.IsSubcaliber and 0 or nil
-	Entity.Position     = BulletData.Pos
-	Entity.Velocity     = BulletData.Flight:GetNormalized() * Entity.LaunchVel
-	Entity.Inaccuracy   = 0
-	Entity.Diameter     = Caliber
-
-	Entity.BulletData.Diameter = Caliber
-	Entity.BulletData.Speed = Entity.Speed
-
-	Entity.Filter[#Entity.Filter + 1] = Entity
-
-	local PhysObj = Entity:GetPhysicsObject()
-
-	if IsValid(PhysObj) then
-		PhysObj:EnableGravity(false)
-		PhysObj:EnableMotion(false)
-		PhysObj:SetMass(Entity.ForcedMass)
-	end
-
-	ACF.Activate(Entity)
-
-	ACF.Classes.Missiles[Entity] = true -- no clue what this line does, just copied from ACF-3-Missiles, doesnt seem useful
-
-	hook.Run("ACF_OnLaunchMissile", Entity)
-
-	return Entity
-end
-
 function SWEP:SetupACFBullet()
 	local Area = math.pi * (SWEP.Caliber * 0.05) ^ 2
 	self.Bullet = {
@@ -770,6 +687,10 @@ if CLIENT then
 		if self.Bullet.Type == "HEAT" then
 			self.MeasuredPen = math.Round(AmmoTypes["HEAT"]:GetPenetration(self.Bullet, self.ACFHEATStandoff, ACF.SteelDensity),1)
 			PenText = self.MeasuredPen .. "mm @ All distances"
+		elseif self.Bullet.Type == "HEATFS" then
+			
+		elseif self.Bullet.Type == "GLATGM" then
+			
 		else
 			self.MeasuredPen = math.Round(AmmoTypes[self.ACFType]:GetRangedPenetration(self.Bullet,self.CalcDistance),1)
 			self.MeasuredPen2 = math.Round(AmmoTypes[self.ACFType]:GetRangedPenetration(self.Bullet,self.CalcDistance2),1)
