@@ -3,7 +3,6 @@ AddCSLuaFile("shared.lua")
 
 include("shared.lua")
 
-local hook       = hook
 local ACF        = ACF
 local Missiles   = ACF.ActiveMissiles
 local Ballistics = ACF.Ballistics
@@ -44,7 +43,6 @@ local function DetonateMissile(Missile, Inflictor)
 end
 
 function MakeACF_SWEPATGM(Gun, BulletData)
-    
 
 	local Entity = ents.Create("acf_swep_missile")
 
@@ -111,6 +109,7 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 	Entity.Velocity     = BulletData.Flight:GetNormalized() * Entity.LaunchVel
 	Entity.Inaccuracy   = 0
 	Entity.Diameter     = Caliber
+	Entity.DropMult     = BulletData.DropMult
 
 	Entity.BulletData.Diameter 	= Caliber
 	Entity.BulletData.Speed 	= Entity.Speed
@@ -245,7 +244,7 @@ function ENT:Think()
 		local Spread = self.Inaccuracy * DeltaTime * 0.005
 		local Added  = VectorRand() * Spread
 
-		NextDir = (self.Velocity:GetNormalized() + Vector(0,0, -0.0003) + Added):GetNormalized()
+		NextDir = (self.Velocity:GetNormalized() + Vector(0,0, -0.0003 * (self.DropMult or 1)) + Added):GetNormalized()
 		NextAng = NextDir:Angle()
 
 		self.Inaccuracy = self.Inaccuracy + DeltaTime * 1
@@ -277,7 +276,7 @@ end
 
 function ENT:Detonate()
     print("AAAAAAAAAAAAAAAAAAAAAAA")
-    PrintTable(Clock)
+    
 
 	if self.Detonated then return end
 
@@ -292,7 +291,6 @@ function ENT:Detonate()
 	self.Detonated = true
 
 	local Bullet = Ballistics.CreateBullet(BulletData)
-
 
 	Ammo:Detonate(Bullet, Position)
 

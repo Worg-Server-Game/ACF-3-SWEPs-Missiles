@@ -63,6 +63,7 @@ SWEP.ACFHEATCasingMass = 15.302708554672
 
 // END OF COPY PASTE DATA
 
+SWEP.dropMultiplier = 5
 SWEP.ACFMuzzleVel = 10
 SWEP.LimitVel = 25
 SWEP.BurnDuration = 0.5
@@ -149,6 +150,7 @@ function SWEP:PrimaryAttack()
 
 			LimitVel 		= self.LimitVel,
 			BurnDuration 	= self.BurnDuration,
+			DropMult        = self.dropMultiplier,
 
 			Diameter 		= Caliber,
 			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet

@@ -4,7 +4,7 @@ include("weapon_acf_base.lua")
 
 SWEP.Base                   = "weapon_acf_base"
 SWEP.PrintName              = "ACF HL2 RPG"
-SWEP.Category               = "ACF-3 SWEPs Good"
+SWEP.Category               = "ACF-3 SWEPs"
 
 SWEP.IconOffset				= Vector(4,-4,0)
 SWEP.IconAngOffset			= Angle()
@@ -66,6 +66,7 @@ SWEP.ACFHEATCasingMass = 1.9239278892978
 SWEP.ACFMuzzleVel = 50
 SWEP.LimitVel = 75
 SWEP.BurnDuration = 0.5
+SWEP.dropMultiplier = 1
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0
@@ -150,6 +151,7 @@ function SWEP:PrimaryAttack()
 			RoundVolume 	= self.ACFHEATRoundVolume,
 			BreakupDist 	= self.ACFHEATBreakupDist,
 			BreakupTime 	= self.ACFHEATBreakupTime,
+			DropMult        = self.dropMultiplier
 
 			LimitVel 		= self.LimitVel,
 			BurnDuration 	= self.BurnDuration,
