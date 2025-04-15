@@ -151,7 +151,7 @@ function SWEP:PrimaryAttack()
 			RoundVolume 	= self.ACFHEATRoundVolume,
 			BreakupDist 	= self.ACFHEATBreakupDist,
 			BreakupTime 	= self.ACFHEATBreakupTime,
-			DropMult        = self.dropMultiplier
+			DropMult        = self.dropMultiplier,
 
 			LimitVel 		= self.LimitVel,
 			BurnDuration 	= self.BurnDuration,
