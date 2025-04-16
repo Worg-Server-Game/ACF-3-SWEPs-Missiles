@@ -109,7 +109,7 @@ function SWEP:PrimaryAttack()
 	if not Ply:IsOnGround() then return end
 	if Ply:GetVelocity():Length() > 20 then return end
 
-	
+
 	local AimMod = self:GetAimMod()
 	local Punch = self:GetPunch()
 
@@ -127,10 +127,10 @@ function SWEP:PrimaryAttack()
 		--self:ShootBullet(Ply:GetShootPos(),(Dir:Angle() + Angle(self.AimTable[self:GetNW2Int("aimsetting",1)].PitchAdjust,0,0)):Forward())
 
 		local BulletData = {
-			MuzzleVel 		= self.ACFMuzzleVel, 
-			Caliber 		= self.Caliber, 
-			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * 10, 
-			ProjMass 		= self.ACFProjMass, 
+			MuzzleVel 		= self.ACFMuzzleVel,
+			Caliber 		= self.Caliber,
+			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * 10,
+			ProjMass 		= self.ACFProjMass,
 			PropMass 		= self.ACFHEATPropMass,
 			Flight 			= Dir,
 			Speed 			= self.MuzzleVel,
@@ -164,11 +164,11 @@ function SWEP:PrimaryAttack()
 	else
 		self:Recoil(Punch)
 	end
-	
+
 
 	self:PostShot(1)
 
-	
+
 end
 
 local FiremodeSound = Sound("Weapon_SMG1.Special2")
@@ -187,7 +187,7 @@ function SWEP:SecondaryAttack()
 
 		self.NextAttack2Toggle = CurTime() + 0.25
 		return true
-		
+
 	end
 
 	return true

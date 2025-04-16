@@ -46,11 +46,11 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 
 	local Entity = ents.Create("acf_swep_missile")
 
-    timer.Simple(60, function()
-        if not IsValid(Entity) then return end
+		timer.Simple(60, function()
+				if not IsValid(Entity) then return end
 
-        Entity:Remove()
-    end)
+				Entity:Remove()
+		end)
 
 	if not IsValid(Entity) then return end
 
@@ -275,26 +275,31 @@ function ENT:Think()
 end
 
 function ENT:Detonate()
-    print("AAAAAAAAAAAAAAAAAAAAAAA")
-    
-
 	if self.Detonated then return end
 
+	local PhysObj       = self:GetPhysicsObject()
 	local BulletData    = self.BulletData
-	local Position      = self.Position
 	local Ammo          = AmmoTypes.Get(BulletData.Type)
+	self:SetNotSolid(true)
+	self:SetNoDraw(true)
+	self.Detonated = true
+	Missiles[self] = nil
 
 	BulletData.Filter   = self.Filter
+	BulletData.Pos      = self.Position
 	BulletData.Flight   = self.Velocity:GetNormalized() * self.Speed
-	BulletData.Pos      = Position
+	BulletData.DetonatorAngle = 91
 
-	self.Detonated = true
+	if IsValid(PhysObj) then
+		PhysObj:EnableMotion(false)
+	end
 
-	local Bullet = Ballistics.CreateBullet(BulletData)
+	timer.Simple(1, function()
+		if IsValid(self) then self:Remove() end
+	end)
 
-	Ammo:Detonate(Bullet, Position)
-
-	self:Remove()
+	Ballistics.CreateBullet(BulletData)
+	return true
 end
 
 function ENT:OnRemove()
