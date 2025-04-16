@@ -298,8 +298,7 @@ function ENT:Detonate()
 		if IsValid(self) then self:Remove() end
 	end)
 
-	local Bullet = Ballistics.CreateBullet(BulletData)
-
+	Ballistics.CreateBullet(BulletData)
 	return true
 end
 
