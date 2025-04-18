@@ -11,6 +11,9 @@ local Damage     = ACF.Damage
 local Clock      = ACF.Utilities.Clock
 local TraceData  = { start = true, endpos = true, filter = true }
 local ZERO       = Vector()
+local Classes    = ACF.Classes
+local Debug		 = ACF.Debug
+local Objects    = Damage.Objects
 
 local function CheckViewCone(Missile, HitPos)
 	local Position = Missile.Position
@@ -274,32 +277,201 @@ function ENT:Think()
 	return true
 end
 
-function ENT:Detonate()
-	if self.Detonated then return end
-
-	local PhysObj       = self:GetPhysicsObject()
-	local BulletData    = self.BulletData
-	local Ammo          = AmmoTypes.Get(BulletData.Type)
-	self:SetNotSolid(true)
-	self:SetNoDraw(true)
-	self.Detonated = true
-	Missiles[self] = nil
-
-	BulletData.Filter   = self.Filter
-	BulletData.Pos      = self.Position
-	BulletData.Flight   = self.Velocity:GetNormalized() * self.Speed
-	BulletData.DetonatorAngle = 91
-
-	if IsValid(PhysObj) then
-		PhysObj:EnableMotion(false)
+function ENT:GetPenetration(Bullet, Standoff)
+	if not isnumber(Standoff) then
+		return 1 -- Does not matter, just so calls to damage functions don't go sneedmode
 	end
 
-	timer.Simple(1, function()
-		if IsValid(self) then self:Remove() end
-	end)
+	local BreakupT      = Bullet.BreakupTime
+	local MaxVel        = Bullet.JetMaxVel
+	local PenMul        = Bullet.PenMul or 1
+	local Gamma         = 1 --math.sqrt(TargetDensity / ACF.CopperDensity) (Set to 1 to maintain continuity)
 
-	Ballistics.CreateBullet(BulletData)
-	return true
+	local Penetration = 0
+	if Standoff < Bullet.BreakupDist then
+		local JetTravel = BreakupT * MaxVel
+		local K1 = 1 + Gamma
+		local K2 = 1 / K1
+		Penetration = (K1 * (JetTravel * Standoff) ^ K2 - math.sqrt(K1 * ACF.HEATMinPenVel * BreakupT * JetTravel ^ K2 * Standoff ^ (Gamma * K2))) / Gamma - Standoff
+	else
+		Penetration = (MaxVel * BreakupT - math.sqrt(ACF.HEATMinPenVel * BreakupT * (MaxVel * BreakupT + Gamma * Standoff))) / Gamma
+	end
+
+	return math.max(Penetration * ACF.HEATPenMul * PenMul * 1e3, 0) -- m to mm
+end
+
+function ENT:Detonate()
+	if self.Detonated then return end	-- Prevents GLATGM spawned HEAT projectiles from detonating twice, or for that matter this running twice at all
+	self.Detonated = true
+	local HitPos = self:GetPos()
+
+	local BulletData = self.BulletData
+
+	local Filler    = BulletData.BoomFillerMass
+	local Fragments = BulletData.CasingMass
+	local DmgInfo   = Objects.DamageInfo(BulletData.Owner, BulletData.Gun)
+
+	Damage.createExplosion(HitPos, Filler, Fragments, nil, DmgInfo)
+
+	-- Find ACF entities in the range of the damage (or simplify to like 6m)
+	local FoundEnts = ents.FindInSphere(HitPos, 250)
+	local Squishies = {}
+	for _, v in ipairs(FoundEnts) do
+		local Class = v:GetClass()
+
+		-- Blacklist armor and props, the most common entities
+		if Class ~= "acf_armor" and Class ~= "prop_physics" and (Class:find("^acf") or Class:find("^gmod_wire") or Class:find("^prop_vehicle") or v:IsPlayer()) then
+			Squishies[#Squishies + 1] = v
+		end
+	end
+
+	-- Move the jet start to the impact point and back it up by the passive standoff
+	local Start		= BulletData.Standoff * ACF.MeterToInch
+	local End		= BulletData.BreakupDist * 10 * ACF.MeterToInch
+	local Direction = BulletData.Flight:GetNormalized()
+	local JetStart  = HitPos - Direction * Start
+	local JetEnd    = HitPos + Direction * End
+
+	Debug.Cross(JetStart, 15, 15, Color(0, 255, 0), true)
+	Debug.Cross(JetEnd, 15, 15, Color(255, 0, 0), true)
+
+	local TraceData = {start = JetStart, endpos = JetEnd, filter = {}, mask = BulletData.Mask}
+	local Penetrations = 0
+	local JetMassPct   = 1
+	-- Main jet penetrations
+	while Penetrations < 20 do
+		local TraceRes  = ACF.trace(TraceData)
+		local PenHitPos = TraceRes.HitPos
+		local Ent       = TraceRes.Entity
+
+		if TraceRes.Fraction == 1 and not IsValid(Ent) then break end
+
+		Debug.Line(JetStart, PenHitPos, 15, ColorRand(100, 255))
+
+		if not Ballistics.TestFilter(Ent, BulletData) then TraceData.filter[#TraceData.filter + 1] = TraceRes.Entity continue end
+
+		-- Get the (full jet's) penetration
+		local Standoff    = (PenHitPos - JetStart):Length() * ACF.InchToMeter -- Back to m
+		local Penetration = self:GetPenetration(BulletData, Standoff) * math.max(0, JetMassPct)
+		-- If it's out of range, stop here
+		if Penetration == 0 then break end
+
+		-- Get the effective armor thickness
+		local BaseArmor = 0
+		local DamageDealt
+		if TraceRes.HitWorld or TraceRes.Entity and TraceRes.Entity:IsWorld() then
+			-- Get the surface and calculate the RHA equivalent
+			local Surface = util.GetSurfaceData(TraceRes.SurfaceProps)
+			local Density = ((Surface and Surface.density * 0.5 or 500) * math.Rand(0.9, 1.1)) ^ 0.9 / 10000
+			local Penetrated, Exit = Ballistics.DigTrace(PenHitPos + Direction, PenHitPos + Direction * math.max(Penetration / Density, 1) / ACF.InchToMm)
+			-- Base armor is the RHAe if penetrated, or simply more than the penetration so the jet loses all mass and penetration stops
+			BaseArmor = Penetrated and ((Exit - PenHitPos):Length() * Density * ACF.InchToMm) or (Penetration + 1)
+			-- Update the starting position of the trace because world is not filterable
+			TraceData.start = Exit
+		--elseif Ent:CPPIGetOwner() == game.GetWorld() then
+			-- TODO: Fix world entity penetration
+			--BaseArmor = Penetration + 1
+		elseif TraceRes.Hit then
+			BaseArmor = Ent.GetArmor and Ent:GetArmor(TraceRes) or Ent.ACF and Ent.ACF.Armour or 0
+			-- Enable damage if a valid entity is hit
+			DamageDealt = 0
+		end
+
+		local Angle          = ACF.GetHitAngle(TraceRes, Direction)
+		local EffectiveArmor = Ent.GetArmor and BaseArmor or BaseArmor / math.abs(math.cos(math.rad(Angle)))
+
+		-- Percentage of total jet mass lost to this penetration
+		local LostMassPct =  EffectiveArmor / Penetration
+		-- Deal damage based on the volume of the lost mass
+		local Cavity = ACF.HEATCavityMul * math.min(LostMassPct, JetMassPct) * BulletData.JetMass / ACF.CopperDensity -- in cm^3
+		local _Cavity = Cavity -- Remove when health scales with armor
+		if DamageDealt == 0 then
+			_Cavity = Cavity * (Penetration / EffectiveArmor) * 0.035 -- Remove when health scales with armor
+
+			local JetDmg, JetInfo = Damage.getBulletDamage(BulletData, TraceRes)
+
+			JetInfo:SetType(DMG_BULLET)
+			JetDmg:SetDamage(_Cavity)
+
+			local JetResult = Damage.dealDamage(Ent, JetDmg, JetInfo)
+
+			if JetResult.Kill then
+				ACF.APKill(Ent, Direction, 0, JetInfo)
+			end
+		end
+		-- Reduce the jet mass by the lost mass
+		JetMassPct = JetMassPct - LostMassPct
+
+		if JetMassPct < 0 then break end
+
+		-- Filter the hit entity
+		if TraceRes.Entity then TraceData.filter[#TraceData.filter + 1] = TraceRes.Entity end
+
+		-- Determine how much damage the squishies will take
+		local Damageables = {}
+		local AreaSum     = 0
+		local AvgDist     = 0
+		for _, v in ipairs(Squishies) do
+			local TargetPos = v:GetPos()
+			local DotProd   = (TargetPos - PenHitPos):GetNormalized():Dot(Direction)
+			-- If within the arc of spalling
+			if DotProd > 0 then
+				-- Run a trace to determine if the target is occluded
+				local TargetTrace = {start = PenHitPos, endpos = TargetPos, filter = TraceData.filter, mask = self.Mask}
+				local TargetRes   = ACF.trace(TargetTrace)
+				local SpallEnt    = TargetRes.Entity
+				-- If the trace hits something, deal damage to it (doesn't matter if it's not the squishy we wanted)
+				if TraceRes.HitNonWorld and ACF.Check(SpallEnt) then
+					Debug.Line(PenHitPos, TargetPos, 15, ColorRand(100, 255))
+
+					local DistSqr = math.max(1, (TargetRes.HitPos - PenHitPos):LengthSqr())
+					-- Calculate how much shrapnel will hit the target based on it's relative area
+					-- Divided by the distance because far away things seem smaller, mult'd by the dot product because
+					--  spalling is concentrated around the main jet, and divided by 6 because (simplifying the target
+					--  as a cube, good enough) one of the 6 faces is visible
+					local Area    = SpallEnt.ACF.Area
+					local RelArea = (DotProd ^ 3) * Area / (DistSqr * 6)
+
+					AreaSum = AreaSum + RelArea
+					AvgDist = AvgDist + math.sqrt(DistSqr)
+
+					local EntArmor = SpallEnt.GetArmor and SpallEnt:GetArmor(TraceRes) or SpallEnt.ACF and SpallEnt.ACF.Armour
+					local EffArmor = (EffectiveArmor * 0.5 / EntArmor) * 14 -- Magic multiplier to prevent nuking armored plates
+
+					Damageables[#Damageables + 1] = { SpallEnt, RelArea * EffArmor, TargetRes }
+				end
+			end
+		end
+
+		AvgDist = AvgDist / #Damageables
+
+		local Radius  = AvgDist * SpallingSin
+		-- Minimum area is the base of the spalling cone, with the distance being the average squishy distance
+		-- Divided by the average distance squared so it's the same as the relative area
+		local MinArea = Radius * Radius * math.pi / (AvgDist * AvgDist)
+
+		AreaSum = math.max(AreaSum, MinArea)
+
+		for _, v in ipairs(Damageables) do
+			local Entity, Area, TraceRes = unpack(v)
+			local SpallDmg, SpallInfo    = Damage.getBulletDamage(self, TraceRes)
+			-- Damage is proportional to how much relative surface area the target occupies from the jet's POV
+			local SpallDamage = _Cavity * Area / AreaSum  -- change from _Cavity to Cavity when health scales with armor
+
+			SpallInfo:SetType(DMG_BULLET)
+			SpallDmg:SetDamage(SpallDamage)
+
+			local JetResult = Damage.dealDamage(Entity, SpallDmg, SpallInfo)
+
+			if JetResult.Kill then
+				ACF.APKill(Entity, Direction, 0, SpallInfo)
+			end
+		end
+
+		Penetrations = Penetrations + 1
+	end
+
+	self:Remove()
 end
 
 function ENT:OnRemove()
