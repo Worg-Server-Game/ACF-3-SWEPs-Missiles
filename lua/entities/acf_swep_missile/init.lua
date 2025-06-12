@@ -49,11 +49,11 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 
 	local Entity = ents.Create("acf_swep_missile")
 
-		timer.Simple(60, function()
-				if not IsValid(Entity) then return end
+	timer.Simple(60, function()
+		if not IsValid(Entity) then return end
 
-				Entity:Remove()
-		end)
+		Entity:Remove()
+	end)
 
 	if not IsValid(Entity) then return end
 
@@ -61,7 +61,7 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 	local Caliber  = BulletData.Caliber
 	local Owner    = Gun.Owner
 
-	Entity:SetAngles(Gun:GetAngles())
+	Entity:SetAngles(Owner:EyeAngles())
 	Entity:SetPos(BulletData.Pos)
 	Entity:CPPISetOwner(Owner)
 	Entity:SetPlayer(Owner)
@@ -98,7 +98,7 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 	Entity.GuideDelay   = CurTime() + 0.25 -- Missile won't be guided for the first quarter of a second
 	Entity.LastThink    = CurTime()
 	Entity.Filter       = Entity.BulletData.Filter
-	Entity.Agility      = 50 -- Magic multiplier that controls the agility of the missile
+	Entity.Agility      = 25 -- Magic multiplier that controls the agility of the missile
 	Entity.IsSubcaliber = false -- just set this to false because its a handheld and the rockets are gonna be small
 	Entity.LaunchVel    = math.Round(Velocity * 0.2, 2) * 39.37
 	Entity.DiffVel      = math.Round(Velocity * 0.5, 2) * 39.37 - Entity.LaunchVel
@@ -222,17 +222,17 @@ function ENT:Think()
 
 	local DeltaTime = Time - self.LastThink
 	local CanGuide  = self.GuideDelay <= Time
-	local Computer  = self:GetComputer()
-	local CanSee    = IsValid(Computer) and CheckViewCone(self, Computer.HitPos)
+	local Computer  = self.Owner:GetActiveWeapon()
+	local CanSee    = IsValid(Computer) and CheckViewCone(self, self.Owner:GetEyeTrace().HitPos)
 	local Position  = self.Position
 	local NextDir, NextAng
 
 	self.Speed = self.LaunchVel + self.DiffVel * math.Clamp(1 - (self.AccelTime - Time) / self.AccelLength, 0, 1)
 
-	if CanGuide and CanSee then
-		local Origin      = Computer:LocalToWorld(Computer.Offset)
+	if self.Owner:Alive() and CanSee and self.Owner:GetActiveWeapon() == self.Weapon then
+		local Origin      = self.Owner:EyePos()
 		local Distance    = Origin:Distance(Position) + self.Speed * 0.15
-		local Target      = Origin + Computer.TraceDir * Distance
+		local Target      = self.Owner:GetEyeTrace().HitPos
 		local Expected    = (Target - Position):GetNormalized():Angle()
 		local Current     = self.Velocity:GetNormalized():Angle()
 		local _, LocalAng = WorldToLocal(Target, Expected, Position, Current)
@@ -309,7 +309,7 @@ function ENT:Detonate()
 
 	local Filler    = BulletData.BoomFillerMass
 	local Fragments = BulletData.CasingMass
-	local DmgInfo   = Objects.DamageInfo(BulletData.Owner, BulletData.Gun)
+	local DmgInfo   = Objects.DamageInfo(self.Owner, self.Owner:GetActiveWeapon())
 
 	Damage.createExplosion(HitPos, Filler, Fragments, nil, DmgInfo)
 
@@ -339,6 +339,7 @@ function ENT:Detonate()
 	local Penetrations = 0
 	local JetMassPct   = 1
 	-- Main jet penetrations
+
 	while Penetrations < 20 do
 		local TraceRes  = ACF.trace(TraceData)
 		local PenHitPos = TraceRes.HitPos

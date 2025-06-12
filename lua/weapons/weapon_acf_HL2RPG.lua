@@ -2,71 +2,72 @@ AddCSLuaFile()
 
 include("weapon_acf_base.lua")
 
-SWEP.Base                   = "weapon_acf_base"
-SWEP.PrintName              = "ACF HL2 RPG"
-SWEP.Category               = "ACF-3 SWEPs"
+SWEP.Base               	= "weapon_acf_base"
+SWEP.PrintName          	= "ACF HL2 RPG"
+SWEP.Category           	= "ACF-3 SWEPs"
+SWEP.Author             	= "Duck called Aaronimus"
 
 SWEP.IconOffset				= Vector(4,-4,0)
 SWEP.IconAngOffset			= Angle()
 
-SWEP.UseHands               = true
-SWEP.ViewModel              = "models/weapons/c_rpg.mdl"
-SWEP.ViewModelFlip          = false
+SWEP.UseHands           	= true
+SWEP.ViewModel          	= "models/weapons/c_rpg.mdl"
+SWEP.ViewModelFlip      	= false
 SWEP.ViewModelFOV			= 45
 
 SWEP.ShotSound				= Sound("weapons/rpg/rocketfire1.wav")
-SWEP.WorldModel             = "models/weapons/w_rocket_launcher.mdl"
-SWEP.HoldType               = "rpg"
+SWEP.WorldModel         	= "models/weapons/w_rocket_launcher.mdl"
+SWEP.HoldType           	= "rpg"
 
-SWEP.Weight                 = 1
+SWEP.Weight             	= 1
 
-SWEP.Slot                   = 4
-SWEP.SlotPos                = 0
+SWEP.Slot               	= 4
+SWEP.SlotPos            	= 0
 
-SWEP.Spawnable              = true
-SWEP.AdminOnly              = false
+SWEP.Spawnable          	= true
+SWEP.AdminOnly          	= false
 
-SWEP.m_WeaponDeploySpeed    = 1
-SWEP.Spread                 = 0.125
-SWEP.RecoilMod              = 0.1
+SWEP.m_WeaponDeploySpeed	= 1
+SWEP.Spread             	= 0.125
+SWEP.RecoilMod          	= 0.1
 
-SWEP.Primary.ClipSize       = 1
-SWEP.Primary.DefaultClip    = 1
-SWEP.Primary.Ammo           = "RPG_round"
-SWEP.Primary.Automatic      = false
-SWEP.Primary.Delay          = 1
+SWEP.Primary.ClipSize   	= 1
+SWEP.Primary.DefaultClip	= 1
+SWEP.Primary.Ammo       	= "RPG_round"
+SWEP.Primary.Automatic  	= false
+SWEP.Primary.Delay      	= 1
 
 // you can get this data by typing "acf_sweps_getDataFromAmmo" in console while looking at a GLATGM ammo box
 // calibers lower than 100mm do not suffer from horrible inaccuracy
 
 // copy paste values that the command puts in console to replace these to make your own custom thing
 
-SWEP.ACFHEATStandoff = 0.0062481986417478
-SWEP.ACFHEATBreakupDist = 0.13888488012627
-SWEP.ACFHEATJetMass = 0.21111592232944
-SWEP.Caliber = 63
-SWEP.Tracer = 0
-SWEP.ACFHEATBreakupTime = 2.6718201950522e-05
-SWEP.ACFType = "HEAT"
-SWEP.LimitVel = 100
-SWEP.ACFHEATCartMass = 4.0919797362672
-SWEP.ACFHEATBoomFillerMass = 0.69887141551432
-SWEP.ACFHEATRoundVolume = 1571.0916365043
-SWEP.ACFHEATLinerMass = 1
-SWEP.ACFHEATJetMinVel = 1919.3566600685
-SWEP.ACFHEATJetMaxVel = 5198.1372243337
-SWEP.ACFProjMass = 4.0327520753672
-SWEP.ACFHEATPropMass = 0.059227660899965
-SWEP.ACFMuzzleVel = 177.69727130359
-SWEP.FillerMass = 1.3614378224305
-SWEP.ACFHEATCasingMass = 1.9239278892978
+SWEP.ACFHEATStandoff 		= 0.0062481986417478
+SWEP.ACFHEATBreakupDist 	= 0.13888488012627
+SWEP.ACFHEATJetMass 		= 0.21111592232944
+SWEP.Caliber 				= 63
+SWEP.Tracer 				= 0
+SWEP.ACFHEATBreakupTime 	= 2.6718201950522e-05
+SWEP.ACFType 				= "HEAT"
+SWEP.LimitVel 				= 100
+SWEP.ACFHEATCartMass 		= 4.0919797362672
+SWEP.ACFHEATBoomFillerMass 	= 0.69887141551432
+SWEP.ACFHEATRoundVolume 	= 1571.0916365043
+SWEP.ACFHEATLinerMass		= 1
+SWEP.ACFHEATJetMinVel		= 1919.3566600685
+SWEP.ACFHEATJetMaxVel		= 5198.1372243337
+SWEP.ACFProjMass 			= 4.0327520753672
+SWEP.ACFHEATPropMass 		= 0.059227660899965
+SWEP.ACFMuzzleVel 			= 177.69727130359
+SWEP.FillerMass 			= 1.3614378224305
+SWEP.ACFHEATCasingMass 		= 1.9239278892978
 
 // END OF COPY PASTE DATA
 
-SWEP.ACFMuzzleVel = 50
-SWEP.LimitVel = 75
-SWEP.BurnDuration = 0.5
-SWEP.dropMultiplier = 1
+SWEP.ACFMuzzleVel 			= 50
+SWEP.LimitVel 				= 75
+SWEP.BurnDuration 			= 0.5
+SWEP.dropMultiplier 		= 1
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0

@@ -80,3 +80,8 @@ end
 
 concommand.Add( "acf_sweps_getDataFromAmmo", getDataFromAmmo, true, "Gets Data from an ammo crate to be imported for ACF Sweps")
 
+function createACFExplode(ply)
+
+end
+
+concommand.Add( "acf_sweps_getDataFromAmmo", createACFExplode, true, "Creates an explosion for debug purposes")
