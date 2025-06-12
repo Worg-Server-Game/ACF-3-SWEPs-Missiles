@@ -4,7 +4,7 @@ include("weapon_acf_base.lua")
 
 SWEP.Base                   = "weapon_acf_base"
 SWEP.PrintName              = "handgun"
-SWEP.Category               = "Other"
+SWEP.Category               = "ACF-3 SWEPs"
 
 SWEP.IconOffset				= Vector(4,4,0)
 SWEP.IconAngOffset			= Angle(0,180,0)
