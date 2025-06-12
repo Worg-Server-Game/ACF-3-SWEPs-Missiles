@@ -48,7 +48,7 @@ SWEP.Caliber = 380
 SWEP.FillerMass = 32.928183785914
 SWEP.ACFHEATBreakupTime = 6.1857630030215e-05
 SWEP.ACFType = "GLATGM"
-SWEP.LimitVel = 100
+SWEP.LimitVel = 0.1
 SWEP.ACFHEATCartMass = 64.360832275829
 SWEP.ACFHEATBoomFillerMass = 14.598161478422
 SWEP.ACFHEATRoundVolume = 69181.011824701
@@ -64,8 +64,8 @@ SWEP.ACFHEATCasingMass = 15.302708554672
 // END OF COPY PASTE DATA
 
 SWEP.dropMultiplier = 5
-SWEP.ACFMuzzleVel = 10
-SWEP.LimitVel = 25
+SWEP.ACFMuzzleVel = 0.1
+SWEP.LimitVel = 0.1
 SWEP.BurnDuration = 0.5
 
 SWEP.IronScale              = 0
