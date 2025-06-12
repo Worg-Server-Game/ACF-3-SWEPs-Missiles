@@ -346,7 +346,6 @@ function ENT:Detonate(Destroyed)
 	Bullet.Owner = self.Owner
 
 	AmmoTypes.Get(BulletData.Type):Detonate(Bullet, BulletData.Pos)
-	
 end
 
 function ENT:OnRemove()

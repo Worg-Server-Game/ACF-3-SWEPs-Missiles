@@ -83,28 +83,7 @@ function SWEP:PrimaryAttack()
 		local Dir = (Aim + Spread):GetNormalized()
 
 		self:ShootBullet(Ply:GetShootPos(),Dir)
-
-		local inradius = ents.FindInSphere(Ply:GetPos() + Aim * 50, 100)
-	
-		for key, ent in ipairs(inradius) do
-			if ent:GetClass() != "rocketjump_rocket" then
-				if ent:IsValid() then
-					local dir = ent:GetPos() - (Ply:GetPos() + Aim * 50)
-	
-					local dir = dir:GetNormalized()
-					local dir = Vector(dir.x * 15, dir.y * 15, dir.z * 15 + 10)
-					local dir = dir * 30
-					local newVel = ent:GetVelocity()
-					local newVel = Vector(newVel.x, newVel.y, 0)
-					local newVel = newVel + dir
-					ent:SetVelocity(newVel)
-
-					if ent:GetPhysicsObject():IsValid() then
-						ent:GetPhysicsObject():SetVelocity(newVel)
-					end
-				end
-			end
-		end
+		
 	else
 		self:Recoil(Punch)
 	end
