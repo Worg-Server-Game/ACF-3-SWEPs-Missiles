@@ -23,7 +23,7 @@ SWEP.Slot                   = 4
 SWEP.SlotPos                = 0
 
 SWEP.Spawnable              = true
-SWEP.AdminOnly              = true
+SWEP.AdminOnly              = false
 
 SWEP.m_WeaponDeploySpeed    = 1.1
 SWEP.Spread                 = 0.5

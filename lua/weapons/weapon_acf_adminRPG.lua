@@ -4,7 +4,7 @@ include("weapon_acf_base.lua")
 
 SWEP.Base                   = "weapon_acf_base"
 SWEP.PrintName              = "Just a regular ACF RPG"
-SWEP.Category               = "ACF-3 SWEPs"
+SWEP.Category               = "Other"
 
 SWEP.IconOffset				= Vector(4, -4, 0)
 SWEP.IconAngOffset			= Angle()
@@ -47,7 +47,7 @@ SWEP.ACFHEATJetMass = 8.6639858153785
 SWEP.Caliber = 380
 SWEP.FillerMass = 32.928183785914
 SWEP.ACFHEATBreakupTime = 6.1857630030215e-05
-SWEP.ACFType = "GLATGM"
+SWEP.ACFType = "HEATFS"
 SWEP.LimitVel = 0.1
 SWEP.ACFHEATCartMass = 64.360832275829
 SWEP.ACFHEATBoomFillerMass = 14.598161478422
@@ -61,12 +61,14 @@ SWEP.ACFMuzzleVel = 191.32185745702
 SWEP.Tracer = 0
 SWEP.ACFHEATCasingMass = 15.302708554672
 
+
 // END OF COPY PASTE DATA
 
-SWEP.dropMultiplier = 5
-SWEP.ACFMuzzleVel = 0.1
-SWEP.LimitVel = 0.1
-SWEP.BurnDuration = 0.5
+SWEP.dropMultiplier 		= 5
+SWEP.ACFMuzzleVel 			= 0.1
+SWEP.LimitVel 				= 0.1
+SWEP.BurnDuration 			= 0.5
+SWEP.Agility 				= 250
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0
@@ -123,6 +125,72 @@ function SWEP:PrimaryAttack()
 		--self:ShootBullet(Ply:GetShootPos(),(Dir:Angle() + Angle(self.AimTable[self:GetNW2Int("aimsetting",1)].PitchAdjust,0,0)):Forward())
 
 		local BulletData = {
+			MuzzleVel 		= 0, 
+			Caliber 		= self.Caliber, 
+			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * 10, 
+			ProjMass 		= self.ACFProjMass, 
+			PropMass 		= 0,
+			Flight 			= Dir,
+			Speed 			= 0,
+			Filter 			= {},
+			DragCoef 		= ((3.1416 * (self.Caliber / 2) ^ 2) / 10000) / self.ACFProjMass,
+			CartMass 		= self.ACFHEATCartMass,
+			Type 			= self.ACFType,
+			FillerMass 		= self.FillerMass,
+			BoomFillerMass 	= self.ACFHEATBoomFillerMass,
+			CasingMass 		= self.ACFHEATCasingMass,
+			DetonatorAngle 	= self.ACFHEATDetAngle,
+			Standoff 		= self.ACFHEATStandoff,
+			LinerMass 		= self.ACFHEATLinerMass,
+
+			JetMass 		= self.ACFHEATJetMass,
+			JetMinVel 		= self.ACFHEATJetMinVel,
+			JetMaxVel 		= self.ACFHEATJetMaxVel,
+			RoundVolume 	= self.ACFHEATRoundVolume,
+			BreakupDist 	= self.ACFHEATBreakupDist,
+			BreakupTime 	= self.ACFHEATBreakupTime,
+			Agility 		= self.Agility,
+
+			LimitVel 		= 500,
+			BurnDuration 	= 0,
+			DropMult        = self.dropMultiplier * 3,
+
+			Diameter 		= Caliber,
+			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
+		}
+
+		local missile = MakeACF_SWEPATGM(self, BulletData, true)
+	else
+		self:Recoil(Punch)
+	end
+	
+
+	self:PostShot(1)
+
+	
+end
+
+local FiremodeSound = Sound("Weapon_SMG1.Special2")
+function SWEP:SecondaryAttack()
+	local Ply = self:GetOwner()
+	
+	local AimMod = self:GetAimMod()
+	local Punch = self:GetPunch()
+
+	if SERVER then
+		local Aim = self:GetForward()
+		local Right = self:GetRight()
+		local Up = self:GetUp()
+		if Ply:IsNPC() then Aim = Ply:GetAimVector() end
+
+		local Cone = math.tan(math.rad(self.Spread * AimMod))
+		local randUnitSquare = (Up * (2 * math.random() - 1) + Right * (2 * math.random() - 1))
+		local Spread = randUnitSquare:GetNormalized() * Cone * (math.random() ^ (1 / ACF.GunInaccuracyBias))
+		local Dir = (Aim + Spread):GetNormalized()
+
+		--self:ShootBullet(Ply:GetShootPos(),(Dir:Angle() + Angle(self.AimTable[self:GetNW2Int("aimsetting",1)].PitchAdjust,0,0)):Forward())
+
+		local BulletData = {
 			MuzzleVel 		= self.ACFMuzzleVel, 
 			Caliber 		= self.Caliber, 
 			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * 10, 
@@ -147,8 +215,9 @@ function SWEP:PrimaryAttack()
 			RoundVolume 	= self.ACFHEATRoundVolume,
 			BreakupDist 	= self.ACFHEATBreakupDist,
 			BreakupTime 	= self.ACFHEATBreakupTime,
+			Agility 		= self.Agility,
 
-			LimitVel 		= self.LimitVel,
+			LimitVel 		= 5000,
 			BurnDuration 	= self.BurnDuration,
 			DropMult        = self.dropMultiplier,
 
@@ -156,7 +225,7 @@ function SWEP:PrimaryAttack()
 			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
 		}
 
-		local missile = MakeACF_SWEPATGM(self, BulletData)
+		local missile = MakeACF_SWEPATGM(self, BulletData, false)
 	else
 		self:Recoil(Punch)
 	end
@@ -167,30 +236,65 @@ function SWEP:PrimaryAttack()
 	
 end
 
-local FiremodeSound = Sound("Weapon_SMG1.Special2")
-function SWEP:SecondaryAttack()
-	local Owner = self:GetOwner()
-	if Owner:KeyDown(IN_USE) and (CurTime() > self.NextAttack2Toggle) then
 
-		if SERVER then
-			local cursetting = self:GetNW2Int("aimsetting",1)
-			if (cursetting + 1) > #self.AimTable then cursetting = 1 else cursetting = cursetting + 1 end
-			self:SetNW2Int("aimsetting",cursetting)
-			self:GetOwner():PrintMessage(4,self.AimTable[cursetting].Text)
-		else
-			self:EmitSound(FiremodeSound)
-		end
+function SWEP:Reload()
+local Ply = self:GetOwner()
+	
+	local AimMod = self:GetAimMod()
+	local Punch = self:GetPunch()
 
-		self.NextAttack2Toggle = CurTime() + 0.25
-		return true
-		
+	if SERVER then
+		local Aim = self:GetForward()
+		local Right = self:GetRight()
+		local Up = self:GetUp()
+		if Ply:IsNPC() then Aim = Ply:GetAimVector() end
+
+		local Cone = math.tan(math.rad(self.Spread * AimMod))
+		local randUnitSquare = (Up * (2 * math.random() - 1) + Right * (2 * math.random() - 1))
+		local Spread = randUnitSquare:GetNormalized() * Cone * (math.random() ^ (1 / ACF.GunInaccuracyBias))
+		local Dir = (Aim + Spread):GetNormalized()
+
+		--self:ShootBullet(Ply:GetShootPos(),(Dir:Angle() + Angle(self.AimTable[self:GetNW2Int("aimsetting",1)].PitchAdjust,0,0)):Forward())
+		local BulletData = {
+			MuzzleVel 		= self.ACFMuzzleVel * math.random(0.2, 5), 
+			Caliber 		= self.Caliber, 
+			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * math.random(-75, 75) + Up * math.random(-75, 75), 
+			ProjMass 		= self.ACFProjMass, 
+			PropMass 		= self.ACFHEATPropMass,
+			Flight 			= Dir,
+			Speed 			= self.ACFMuzzleVel * math.random(0.2, 5),
+			Filter 			= {},
+			DragCoef 		= ((3.1416 * (self.Caliber / 2) ^ 2) / 10000) / self.ACFProjMass,
+			CartMass 		= self.ACFHEATCartMass,
+			Type 			= self.ACFType,
+			FillerMass 		= self.FillerMass,
+			BoomFillerMass 	= self.ACFHEATBoomFillerMass,
+			CasingMass 		= self.ACFHEATCasingMass,
+			DetonatorAngle 	= self.ACFHEATDetAngle,
+			Standoff 		= self.ACFHEATStandoff,
+			LinerMass 		= self.ACFHEATLinerMass,
+
+			JetMass 		= self.ACFHEATJetMass,
+			JetMinVel 		= self.ACFHEATJetMinVel,
+			JetMaxVel 		= self.ACFHEATJetMaxVel,
+			RoundVolume 	= self.ACFHEATRoundVolume,
+			BreakupDist 	= self.ACFHEATBreakupDist,
+			BreakupTime 	= self.ACFHEATBreakupTime,
+			Agility 		= self.Agility,
+
+			LimitVel 		= 5000,
+			BurnDuration 	= self.BurnDuration,
+			DropMult        = self.dropMultiplier * 5,
+
+			Diameter 		= Caliber,
+			Ricochet 		= 10, // this is the ricochet angle in degrees, we dont want these to ricochet
+		}
+
+		local missile = MakeACF_SWEPATGM(self, BulletData, false)
+	else
+		self:Recoil(Punch)
 	end
+	
 
-	return true
-end
-
-if CLIENT then
-	function SWEP:GetViewAim()
-		return self.AimTable[self:GetNW2Int("aimsetting",1)]
-	end
+	self:PostShot(1)
 end

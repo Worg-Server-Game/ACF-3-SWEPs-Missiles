@@ -3,7 +3,7 @@ AddCSLuaFile()
 include("weapon_acf_base.lua")
 
 SWEP.Base               	= "weapon_acf_base"
-SWEP.PrintName          	= "ACF HL2 RPG"
+SWEP.PrintName          	= "ACF Anti Aircraft Rocket Launcher"
 SWEP.Category           	= "ACF-3 SWEPs"
 SWEP.Author             	= "Duck called Aaronimus"
 
@@ -42,25 +42,25 @@ SWEP.Primary.Delay      	= 1
 
 // copy paste values that the command puts in console to replace these to make your own custom thing
 
-SWEP.ACFHEATStandoff = 0.053408042740902
-SWEP.ACFHEATBreakupDist = 0.1679506698103
-SWEP.ACFHEATJetMass = 0.18322749777791
-SWEP.Caliber = 100
-SWEP.FillerMass = 3.1087092916811
-SWEP.ACFHEATBreakupTime = 2.8560195886167e-05
+SWEP.ACFHEATStandoff = 0.0059731615869846
+SWEP.ACFHEATBreakupDist = 0.048520055885002
+SWEP.ACFHEATJetMass = 0.048556865958908
+SWEP.Caliber = 70.0000378
+SWEP.FillerMass = 2.3675996129365
+SWEP.ACFHEATBreakupTime = 1.1994035199933e-05
 SWEP.ACFType = "HEAT"
-SWEP.LimitVel = 100
-SWEP.ACFHEATCartMass = 9.5278027622955
-SWEP.ACFHEATBoomFillerMass = 1.595804103063
-SWEP.ACFHEATRoundVolume = 6283.1853071796
-SWEP.ACFHEATLinerMass = 0.29285162138186
-SWEP.ACFHEATJetMinVel = 3550.8238511925
-SWEP.ACFHEATJetMaxVel = 5880.5853601181
-SWEP.ACFProjMass = 9.1547386346817
-SWEP.ACFHEATPropMass = 0.37306412761379
-SWEP.ACFMuzzleVel = 295.99747105103
+SWEP.LimitVel = 75
+SWEP.ACFHEATBoomFillerMass = 1.0496358284019
+SWEP.ACFHEATRoundVolume = 4079.3624663942
+SWEP.ACFHEATLinerMass = 0.094361520891806
+SWEP.ACFHEATJetMinVel = 2102.4564270258
+SWEP.ACFHEATJetMaxVel = 4045.3487984824
+SWEP.ACFHEATCartMass = 11.002605809159
+SWEP.ACFHEATPropMass = 1.4624129596508
+SWEP.ACFProjMass = 9.5401928495085
+SWEP.ACFMuzzleVel = 574.0842954945
 SWEP.Tracer = 0
-SWEP.ACFHEATCasingMass = 5.7531777216188
+SWEP.ACFHEATCasingMass = 7.0782317156802
 
 
 // END OF COPY PASTE DATA
@@ -69,7 +69,7 @@ SWEP.ACFMuzzleVel 			= 50
 SWEP.LimitVel 				= 2500
 SWEP.BurnDuration 			= 0.5
 SWEP.dropMultiplier 		= 1
-SWEP.Agility 				= 25
+SWEP.Agility 				= 15
 SWEP.EnableGuidance 		= true
 
 SWEP.IronScale              = 0
@@ -163,7 +163,7 @@ function SWEP:PrimaryAttack()
 			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
 		}
 
-		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance)
+		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance, true)
 	else
 		self:Recoil(Punch)
 	end

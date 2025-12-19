@@ -15,6 +15,7 @@ local ZERO       = Vector()
 local Classes    = ACF.Classes
 local Debug		 = ACF.Debug
 local Objects    = Damage.Objects
+local Guidances  = ACF.Classes.Guidances
 
 local function CheckViewCone(Missile, HitPos)
 	local Position = Missile.Position
@@ -46,7 +47,7 @@ local function DetonateMissile(Missile, Inflictor)
 	Missile:Detonate()
 end
 
-function MakeACF_SWEPATGM(Gun, BulletData)
+function MakeACF_SWEPATGM(Gun, BulletData, EnableGuidance, HeatSeeking)
 
 	local Entity = ents.Create("acf_swep_missile")
 
@@ -93,13 +94,14 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 	Entity.BulletData   = table.Copy(BulletData)
 	Entity.ForcedArmor  = 5 -- All missiles should get 5mm
 	Entity.ForcedMass   = BulletData.CartMass
-	Entity.UseGuidance  = true
-	Entity.ViewCone     = math.cos(math.rad(50)) -- Number inside is on degrees
+	Entity.UseGuidance  = EnableGuidance
+	Entity.ViewConeAng  = 25
+	Entity.ViewCone     = math.cos(math.rad(Entity.ViewConeAng)) -- Number inside is on degrees
 	Entity.KillTime     = CurTime() + 20
 	Entity.GuideDelay   = CurTime() + 0.25 -- Missile won't be guided for the first quarter of a second
 	Entity.LastThink    = CurTime()
 	Entity.Filter       = Entity.BulletData.Filter
-	Entity.Agility      = 25 -- Magic multiplier that controls the agility of the missile
+	Entity.Agility      = BulletData.Agility -- Magic multiplier that controls the agility of the missile
 	Entity.IsSubcaliber = false -- just set this to false because its a handheld and the rockets are gonna be small
 	Entity.LaunchVel    = math.Round(Velocity * 0.2, 2) * 39.37
 	Entity.DiffVel      = math.Round(Velocity * 0.5, 2) * 39.37 - Entity.LaunchVel
@@ -114,6 +116,9 @@ function MakeACF_SWEPATGM(Gun, BulletData)
 	Entity.Inaccuracy   = 0
 	Entity.Diameter     = Caliber
 	Entity.DropMult     = BulletData.DropMult
+	Entity.LimitVel		= BulletData.LimitVel
+	Entity.HeatSeeking  = HeatSeeking
+	Entity.HeatTarget   = nil
 
 	Entity.BulletData.Diameter 	= Caliber
 	Entity.BulletData.Speed 	= Entity.Speed
@@ -195,23 +200,6 @@ function ENT:ACF_OnDamage(DmgResult, DmgInfo)
 	return HitRes -- This function needs to return HitRes
 end
 
-function ENT:GetComputer()
-	if not self.UseGuidance then return end
-
-	local Weapon = self.Weapon
-
-	if not IsValid(Weapon) then return end
-
-	local Computer = Weapon.Computer
-
-	if not IsValid(Computer) then return end
-	if Computer.Disabled then return end
-	if not Computer.IsComputer then return end
-	if Computer.HitPos == ZERO then return end
-
-	return Computer
-end
-
 function ENT:Think()
 	if self.Detonated then return end
 
@@ -224,26 +212,121 @@ function ENT:Think()
 	local DeltaTime = Time - self.LastThink
 	local CanGuide  = self.GuideDelay <= Time
 	local Computer  = self.Owner:GetActiveWeapon()
-	local CanSee    = IsValid(Computer) and CheckViewCone(self, self.Owner:GetEyeTrace().HitPos)
+	local CanSee    = CheckViewCone(self, self.Owner:GetEyeTrace().HitPos)
 	local Position  = self.Position
 	local NextDir, NextAng
 
-	self.Speed = self.LaunchVel + self.DiffVel * math.Clamp(1 - (self.AccelTime - Time) / self.AccelLength, 0, 1)
+	self.Speed = math.min(self.LaunchVel + self.DiffVel * math.Clamp(1 - (self.AccelTime - Time) / self.AccelLength, 0, 1), self.LimitVel)
 
-	if self.Owner:Alive() and CanSee and self.Owner:GetActiveWeapon() == self.Weapon then
+	if self.UseGuidance then
 		local Origin      = self.Owner:EyePos()
 		local Distance    = Origin:Distance(Position) + self.Speed * 0.15
-		local Target      = self.Owner:GetEyeTrace().HitPos
-		local Expected    = (Target - Position):GetNormalized():Angle()
-		local Current     = self.Velocity:GetNormalized():Angle()
-		local _, LocalAng = WorldToLocal(Target, Expected, Position, Current)
-		local Clamped     = ClampAngle(LocalAng, self.Agility * DeltaTime)
-		local _, WorldAng = LocalToWorld(Vector(), Clamped, Position, Current)
+		local Target 	  = nil
 
-		NextAng = WorldAng
-		NextDir = WorldAng:Forward()
+		if self.HeatSeeking then
 
-		self.Inaccuracy = 0
+			local AirBurstTargets = ACF.GetEntitiesInCone(Position - self:GetForward() * 1500, self:GetForward(), self.ViewConeAng)
+			
+			for Entity in pairs(AirBurstTargets) do
+				local EntPos = Entity:GetPos()
+				local EntDist = EntPos:Distance(Position)
+
+				if EntDist > 500 then continue end
+				
+				if self:GetForward():Dot((EntPos - Position) / EntDist) < math.rad(0) then
+					self:Detonate(false, true)
+				end
+			end
+
+
+			local Targets = ACF.GetEntitiesInCone(Position, self:GetForward(), self.ViewConeAng)
+			local closestDistPrevTarget = nil
+
+			if self.HeatTarget != nil and IsValid(self.HeatTarget) and Position:Distance(self.HeatTarget:GetPos()) < 1500 then
+				timer.Simple(0.75, function()
+					self:Detonate(nil, true)
+				end)
+			end
+
+			for Entity in pairs(Targets) do
+				local EntPos = Entity:GetPos()
+				local DistanceToTarget = nil
+
+				local Direction = (EntPos - Position):GetNormalized()
+				if Direction:Dot(self:GetForward()) > self.ViewCone then
+					local LOSTraceData = {
+						start = Position,
+						endpos = EntPos - Direction * 500,
+						filter = {self, self:GetOwner(), Entity},
+					}
+
+					if not util.TraceLine( LOSTraceData ).Hit then
+						print(Entity:GetClass())
+
+						if self.HeatTarget and IsValid(self.HeatTarget) then
+							DistanceToTarget = self.HeatTarget:GetPos():Distance(EntPos)
+						else
+							self.HeatTarget = Entity
+							DistanceToTarget = self.HeatTarget:GetPos():Distance(EntPos)
+						end
+						
+						if closestDistPrevTarget == nil or DistanceToTarget < closestDistPrevTarget then
+							closestDistPrevTarget = DistanceToTarget
+							self.HeatTarget = Entity
+							Target = Entity:GetPos() + Entity:GetVelocity() * 0.2
+						end
+					end
+				end
+
+			end
+		elseif self.Owner:Alive() and CanSee and self.Owner:GetActiveWeapon() == self.Weapon then
+			if Target == nil then
+				Target = self.Owner:GetEyeTrace().HitPos
+			end
+		end
+
+		for _, Bullet in pairs(Ballistics.Bullets) do
+			if Bullet.Type != "FLR" then continue end
+			if Bullet.FlareObj.Flare.CreateTime > Clock.CurTime then continue end
+			local EntPos = Bullet.Pos
+			if EntPos:Distance(Position) < 250 then
+				self:Detonate(nil, true)
+			end
+			local DistanceToTarget = nil
+			local Direction = (EntPos - Position):GetNormalized()
+			if Direction:Dot(self:GetForward()) > self.ViewCone then
+				local LOSTraceData = {
+					start = Position,
+					endpos = EntPos - Direction * 500,
+					filter = {self, self:GetOwner(), Bullet},
+				}
+
+				if not util.TraceLine( LOSTraceData ).Hit then
+					Target = EntPos + Bullet.Flight * 0.25
+				end
+			end
+		end
+
+		if Target != nil then 
+			local Expected    = (Target - Position):GetNormalized():Angle()
+			local Current     = self.Velocity:GetNormalized():Angle()
+			local _, LocalAng = WorldToLocal(Target, Expected, Position, Current)
+			local Clamped     = ClampAngle(LocalAng, self.Agility * DeltaTime)
+			local _, WorldAng = LocalToWorld(Vector(), Clamped, Position, Current)
+
+			NextAng = WorldAng
+			NextDir = WorldAng:Forward()
+
+			self.Inaccuracy = 0
+		else
+			local Spread = self.Inaccuracy * DeltaTime * 0.005
+			local Added  = VectorRand() * Spread
+
+			NextDir = (self.Velocity:GetNormalized() + Vector(0,0, -0.0003 * (self.DropMult or 1)) + Added):GetNormalized()
+			NextAng = NextDir:Angle()
+
+			self.Inaccuracy = self.Inaccuracy + DeltaTime * 1
+		end
 	else
 		local Spread = self.Inaccuracy * DeltaTime * 0.005
 		local Added  = VectorRand() * Spread
@@ -301,7 +384,7 @@ function ENT:GetPenetration(Bullet, Standoff)
 	return math.max(Penetration * ACF.HEATPenMul * PenMul * 1e3, 0) -- m to mm
 end
 
-function ENT:Detonate(Destroyed)
+function ENT:Detonate(Destroyed, AirBurst)
 	if self.Detonated then return end
 
 	local PhysObj = self:GetPhysicsObject()
@@ -341,11 +424,19 @@ function ENT:Detonate(Destroyed)
 
 	BulletData.DetonatorAngle = 91
 
-	local Bullet = Ballistics.CreateBullet(BulletData)
+	local Filler    = BulletData.BoomFillerMass
+	local Fragments = BulletData.CasingMass
+	local DmgInfo   = Objects.DamageInfo(BulletData.Owner, BulletData.Gun)
 
-	Bullet.Owner = self.Owner
-
-	AmmoTypes.Get(BulletData.Type):Detonate(Bullet, BulletData.Pos)
+	Damage.explosionEffect(self:GetPos(), self:GetForward(), Filler / 15)
+	if not AirBurst then
+		local Bullet = Ballistics.CreateBullet(BulletData)
+		Bullet.Owner = self.Owner
+		AmmoTypes.Get(BulletData.Type):Detonate(Bullet, self:GetPos())
+	else
+		Damage.createExplosion(self:GetPos(), Filler, Fragments, nil, DmgInfo)
+	end
+	
 end
 
 function ENT:OnRemove()
