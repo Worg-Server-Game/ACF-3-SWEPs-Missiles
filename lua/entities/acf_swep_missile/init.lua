@@ -219,20 +219,20 @@ function ENT:Think()
 	self.Speed = math.min(self.LaunchVel + self.DiffVel * math.Clamp(1 - (self.AccelTime - Time) / self.AccelLength, 0, 1), self.LimitVel)
 
 	if self.UseGuidance then
-		local Origin      = self.Owner:EyePos()
-		local Distance    = Origin:Distance(Position) + self.Speed * 0.15
-		local Target 	  = nil
+		local Origin   = self.Owner:EyePos()
+		local Distance = Origin:Distance(Position) + self.Speed * 0.15
+		local Target   = nil
 
 		if self.HeatSeeking then
 
 			local AirBurstTargets = ACF.GetEntitiesInCone(Position - self:GetForward() * 1500, self:GetForward(), self.ViewConeAng)
-			
+
 			for Entity in pairs(AirBurstTargets) do
-				local EntPos = Entity:GetPos()
+				local EntPos  = Entity:GetPos()
 				local EntDist = EntPos:Distance(Position)
 
 				if EntDist > 500 then continue end
-				
+
 				if self:GetForward():Dot((EntPos - Position) / EntDist) < math.rad(0) then
 					self:Detonate(false, true)
 				end
