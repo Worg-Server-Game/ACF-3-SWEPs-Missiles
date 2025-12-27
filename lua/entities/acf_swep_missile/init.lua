@@ -434,7 +434,7 @@ function ENT:Detonate(Destroyed, AirBurst)
 		Bullet.Owner = self.Owner
 		AmmoTypes.Get(BulletData.Type):Detonate(Bullet, self:GetPos())
 	else
-		Damage.createExplosion(self:GetPos(), Filler, Fragments, nil, DmgInfo)
+		Damage.createExplosion(self:GetPos(), Filler, Fragments * 5, nil, DmgInfo)
 	end
 	
 end
