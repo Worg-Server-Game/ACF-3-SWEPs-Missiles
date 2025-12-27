@@ -224,7 +224,6 @@ function ENT:Think()
 		local Target   = nil
 
 		if self.HeatSeeking then
-
 			local AirBurstTargets = ACF.GetEntitiesInCone(Position - self:GetForward() * 1500, self:GetForward(), self.ViewConeAng)
 
 			for Entity in pairs(AirBurstTargets) do
@@ -238,7 +237,6 @@ function ENT:Think()
 				end
 			end
 
-
 			local Targets = ACF.GetEntitiesInCone(Position, self:GetForward(), self.ViewConeAng)
 			local closestDistPrevTarget = nil
 
@@ -250,7 +248,7 @@ function ENT:Think()
 
 			for Entity in pairs(Targets) do
 				local EntPos = Entity:GetPos()
-				local DistanceToTarget = nil
+				local DistanceToLastTarget = nil
 
 				local Direction = (EntPos - Position):GetNormalized()
 				if Direction:Dot(self:GetForward()) > self.ViewCone then
@@ -264,16 +262,17 @@ function ENT:Think()
 						print(Entity:GetClass())
 
 						if self.HeatTarget and IsValid(self.HeatTarget) then
-							DistanceToTarget = self.HeatTarget:GetPos():Distance(EntPos)
+							DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
 						else
 							self.HeatTarget = Entity
-							DistanceToTarget = self.HeatTarget:GetPos():Distance(EntPos)
+							DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
 						end
-						
-						if closestDistPrevTarget == nil or DistanceToTarget < closestDistPrevTarget then
-							closestDistPrevTarget = DistanceToTarget
+
+						if closestDistPrevTarget == nil or DistanceToLastTarget < closestDistPrevTarget then
+							closestDistPrevTarget = DistanceToLastTarget
 							self.HeatTarget = Entity
-							Target = Entity:GetPos() + Entity:GetVelocity() * 0.2
+							DistanceToTarget = self:GetPos():Distance(EntPos)
+							Target = Entity:GetPos() + Entity:GetVelocity() * DistanceToTarget / 4000
 						end
 					end
 				end
