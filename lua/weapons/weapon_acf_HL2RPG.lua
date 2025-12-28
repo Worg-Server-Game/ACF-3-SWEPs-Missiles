@@ -197,6 +197,8 @@ function SWEP:SecondaryAttack()
 end
 
 if CLIENT then
+	local SX,SY = ScrW(),ScrH()
+
 	function SWEP:GetViewAim()
 		return self.AimTable[self:GetNW2Int("aimsetting",1)]
 	end
