@@ -284,24 +284,26 @@ function ENT:Think()
 			end
 		end
 
-		for _, Bullet in pairs(Ballistics.Bullets) do
-			if Bullet.Type != "FLR" then continue end
-			if Bullet.FlareObj.Flare.CreateTime > Clock.CurTime then continue end
-			local EntPos = Bullet.Pos
-			if EntPos:Distance(Position) < 250 then
-				self:Detonate(nil, true)
-			end
-			local DistanceToTarget = nil
-			local Direction = (EntPos - Position):GetNormalized()
-			if Direction:Dot(self:GetForward()) > self.ViewCone then
-				local LOSTraceData = {
-					start = Position,
-					endpos = EntPos - Direction * 500,
-					filter = {self, self:GetOwner(), Bullet},
-				}
+		if self.HeatSeeking then
+			for _, Bullet in pairs(Ballistics.Bullets) do
+				if Bullet.Type != "FLR" then continue end
+				if Bullet.FlareObj.Flare.CreateTime > Clock.CurTime then continue end
+				local EntPos = Bullet.Pos
+				if EntPos:Distance(Position) < 250 then
+					self:Detonate(nil, true)
+				end
+				local DistanceToTarget = nil
+				local Direction = (EntPos - Position):GetNormalized()
+				if Direction:Dot(self:GetForward()) > self.ViewCone then
+					local LOSTraceData = {
+						start = Position,
+						endpos = EntPos - Direction * 500,
+						filter = {self, self:GetOwner(), Bullet},
+					}
 
-				if not util.TraceLine( LOSTraceData ).Hit then
-					Target = EntPos + Bullet.Flight * 0.25
+					if not util.TraceLine( LOSTraceData ).Hit then
+						Target = EntPos + Bullet.Flight * 0.25
+					end
 				end
 			end
 		end
