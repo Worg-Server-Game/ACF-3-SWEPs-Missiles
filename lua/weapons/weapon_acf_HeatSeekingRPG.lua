@@ -1,8 +1,8 @@
 AddCSLuaFile()
 
-include("weapon_acf_base.lua")
+include("weapon_acf_HL2RPG.lua")
 
-SWEP.Base               	= "weapon_acf_base"
+SWEP.Base               	= "weapon_acf_hl2rpg"
 SWEP.PrintName          	= "ACF Anti Aircraft Rocket Launcher"
 SWEP.Category           	= "ACF-3 SWEPs"
 SWEP.Author             	= "Duck called Aaronimus"
