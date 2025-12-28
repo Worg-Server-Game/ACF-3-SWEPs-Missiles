@@ -272,7 +272,7 @@ function ENT:Think()
 							closestDistPrevTarget = DistanceToLastTarget
 							self.HeatTarget = Entity
 							DistanceToTarget = self:GetPos():Distance(EntPos)
-							Target = Entity:GetPos() + Entity:GetVelocity() * DistanceToTarget / 4000
+							Target = Entity:GetPos() + Entity:GetVelocity() * DistanceToTarget / 4000 + Vector(0,0,50)
 						end
 					end
 				end
