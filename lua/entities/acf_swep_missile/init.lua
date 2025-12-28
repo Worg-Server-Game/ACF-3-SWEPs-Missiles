@@ -432,12 +432,12 @@ function ENT:Detonate(Destroyed, AirBurst)
 	Damage.explosionEffect(self:GetPos(), self:GetForward(), Filler / 15)
 	if not AirBurst then
 		local Bullet = Ballistics.CreateBullet(BulletData)
-		Bullet.Owner = self.Owner
+		Bullet.Owner = self:GetOwner()
 		AmmoTypes.Get(BulletData.Type):Detonate(Bullet, self:GetPos())
 	else
-		Damage.createExplosion(self:GetPos(), Filler, Fragments * 5, nil, DmgInfo)
+		Damage.createExplosion(self:GetPos(), Filler, Fragments, nil, DmgInfo)
 	end
-	
+
 end
 
 function ENT:OnRemove()
