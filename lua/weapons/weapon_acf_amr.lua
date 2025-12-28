@@ -52,7 +52,7 @@ SWEP.IronSightPos           = Vector(5.775,-4,2)
 SWEP.Scope					= true
 SWEP.Zoom					= 8
 SWEP.HasDropCalc			= true
-SWEP.Recovery				= 0.6
+SWEP.Recovery				= 0.55
 
 SWEP.AimFocused				= 0.01
 SWEP.AimUnfocused			= 3
