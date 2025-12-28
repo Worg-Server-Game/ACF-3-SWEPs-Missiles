@@ -704,6 +704,7 @@ if CLIENT then
 
 	SWEP.FrameCount = 0 -- cheap way to control DPanel
 	function SWEP:DrawWeaponSelection(x,y,w,h,alpha)
+		if not self:GetOwner():Alive() then return end
 		draw.RoundedBox(8,x,y,w,h,Col)
 		draw.RoundedBox(4,x + 8,y + 8,w - 16,h - 16,BGCol)
 		surface.SetDrawColor(White)
