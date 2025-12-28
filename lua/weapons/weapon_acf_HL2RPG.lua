@@ -200,4 +200,18 @@ if CLIENT then
 	function SWEP:GetViewAim()
 		return self.AimTable[self:GetNW2Int("aimsetting",1)]
 	end
+
+	function SWEP:DrawHUD()
+		if self:GetOwner():IsOnGround() and self:GetOwner():GetVelocity():Length() <= 20 and (CurTime() - self.LastShot) >= self.Primary.Delay then
+			surface.SetTextColor( 0, 255, 0, 255 ) -- Set text color
+		elseif self.MissileInFlight then
+			surface.SetTextColor( 255, 255, 0, 255) -- Set text color
+		else
+			surface.SetTextColor( 255, 0, 0, 255) -- Set text color
+		end
+
+		surface.SetTextPos( SX / 2 + 50, SY / 2 + 50 ) -- Set text position, top left corner
+		surface.SetFont( "HL2MPTypeDeath" ) -- Set the font
+		surface.DrawText( "3" ) -- Draw the text
+	end
 end
