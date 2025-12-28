@@ -10,11 +10,11 @@ SWEP.IconOffset				= Vector(4,4,0)
 SWEP.IconAngOffset			= Angle(0,180,0)
 
 SWEP.UseHands               = true
-SWEP.ViewModel              = "models/weapons/v_sniper.mdl"
-SWEP.ViewModelFlip          = false
+SWEP.ViewModel              = "models/weapons/v_snip_sg550.mdl"
+SWEP.ViewModelFlip          = true
 
-SWEP.ShotSound				= Sound(")acf_base/weapons/sniper_fire.mp3")
-SWEP.WorldModel             = "models/weapons/w_sniper.mdl"
+SWEP.ShotSound				= Sound("Weapon_SG552.Single")
+SWEP.WorldModel             = "models/weapons/w_snip_sg550.mdl"
 SWEP.HoldType               = "ar2"
 
 SWEP.Weight                 = 1
@@ -29,10 +29,10 @@ SWEP.m_WeaponDeploySpeed    = 1.1
 SWEP.Spread                 = 0.5
 SWEP.RecoilMod              = 2
 
-SWEP.Primary.ClipSize       = 1
-SWEP.Primary.DefaultClip    = 1
+SWEP.Primary.ClipSize       = 5
+SWEP.Primary.DefaultClip    = 5
 SWEP.Primary.Ammo           = "XBowBolt"
-SWEP.Primary.Automatic      = false
+SWEP.Primary.Automatic      = true
 SWEP.Primary.Delay          = 1.25
 
 SWEP.CalcDistance			= 100
@@ -46,18 +46,18 @@ SWEP.Tracer                 = 1
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0
-SWEP.IronSightPos           = Vector(-5.775,-4,0.92)
+SWEP.IronSightPos           = Vector(5.775,-4,2)
 --SWEP.IronSightAng           = Angle()
 
 SWEP.Scope					= true
 SWEP.Zoom					= 8
 SWEP.HasDropCalc			= true
-SWEP.Recovery				= 0.2
+SWEP.Recovery				= 0.6
 
 SWEP.AimFocused				= 0.01
 SWEP.AimUnfocused			= 3
 
-SWEP.UseHands				= false
+SWEP.UseHands				= true
 
 SWEP:SetupACFBullet()
 
@@ -82,8 +82,7 @@ function SWEP:PrimaryAttack()
 		local Spread = randUnitSquare:GetNormalized() * Cone * (math.random() ^ (1 / ACF.GunInaccuracyBias))
 		local Dir = (Aim + Spread):GetNormalized()
 
-		self:ShootBullet(Ply:GetShootPos(),Dir)
-		
+		self:ShootBullet(Ply:GetShootPos(), Dir)
 	else
 		self:Recoil(Punch)
 	end
@@ -97,6 +96,5 @@ function SWEP:Reload()
 	self:SetNWBool("iron",false)
 	if self:Ammo1() > 0 then
 		self:DefaultReload( ACT_VM_RELOAD )
-		self:EmitSound(Reload)
 	end
 end
