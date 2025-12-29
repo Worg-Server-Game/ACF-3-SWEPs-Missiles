@@ -160,7 +160,7 @@ function SWEP:PrimaryAttack()
 			BurnDuration 	= self.BurnDuration,
 
 			Diameter 		= Caliber,
-			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
+			Ricochet 		= 1000, -- this is the ricochet angle in degrees, we dont want these to ricochet
 		}
 
 		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance)

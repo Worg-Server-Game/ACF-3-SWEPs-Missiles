@@ -47,7 +47,7 @@ local function DetonateMissile(Missile, Inflictor)
 	Missile:Detonate()
 end
 
-function MakeACF_SWEPATGM(Gun, BulletData, EnableGuidance, HeatSeeking)
+function MakeACF_SWEPATGM(Gun, BulletData, EnableGuidance, HeatSeeking, HeatTarget)
 
 	local Entity = ents.Create("acf_swep_missile")
 
@@ -118,7 +118,7 @@ function MakeACF_SWEPATGM(Gun, BulletData, EnableGuidance, HeatSeeking)
 	Entity.DropMult     = BulletData.DropMult
 	Entity.LimitVel		= BulletData.LimitVel
 	Entity.HeatSeeking  = HeatSeeking
-	Entity.HeatTarget   = nil
+	Entity.HeatTarget   = HeatTarget
 
 	Entity.BulletData.Diameter 	= Caliber
 	Entity.BulletData.Speed 	= Entity.Speed
@@ -240,12 +240,6 @@ function ENT:Think()
 			local Targets = ACF.GetEntitiesInCone(Position, self:GetForward(), self.ViewConeAng)
 			local closestDistPrevTarget = nil
 
-			if self.HeatTarget != nil and IsValid(self.HeatTarget) and Position:Distance(self.HeatTarget:GetPos()) < 1500 then
-				timer.Simple(0.75, function()
-					self:Detonate(nil, true)
-				end)
-			end
-
 			for Entity in pairs(Targets) do
 				local EntPos = Entity:GetPos()
 				local DistanceToLastTarget = nil
@@ -259,8 +253,6 @@ function ENT:Think()
 					}
 
 					if not util.TraceLine( LOSTraceData ).Hit then
-						print(Entity:GetClass())
-
 						if self.HeatTarget and IsValid(self.HeatTarget) then
 							DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
 						else

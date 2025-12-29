@@ -2,6 +2,8 @@ AddCSLuaFile()
 
 include("weapon_acf_HL2RPG.lua")
 
+local ACF        			= ACF
+
 SWEP.Base               	= "weapon_acf_hl2rpg"
 SWEP.PrintName          	= "ACF Anti Aircraft Rocket Launcher"
 SWEP.Category           	= "ACF-3 SWEPs"
@@ -105,6 +107,8 @@ SWEP.HasDropCalc			= false
 SWEP.Zoom					= 2
 SWEP.Recovery				= 2
 
+SWEP.lockedTarget = nil
+
 SWEP:SetupACFBullet()
 
 function SWEP:PrimaryAttack()
@@ -163,7 +167,8 @@ function SWEP:PrimaryAttack()
 			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
 		}
 
-		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance, true)
+		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance, true, self.lockedTarget)
+		
 	else
 		self:Recoil(Punch)
 	end
@@ -196,8 +201,87 @@ function SWEP:SecondaryAttack()
 	return true
 end
 
+if SERVER then
+	function SWEP:Think()
+		local Targets = ACF.GetEntitiesInCone(self:GetPos(), self:GetOwner():GetForward(), 15)
+		local targetfinal = nil
+		local smallestAngle = 90
+
+		for target in pairs(Targets) do
+			if not target then continue end
+
+			local angleToTarget = (target:GetPos() - self:GetOwner():GetPos()):GetNormal():Dot(self:GetOwner():GetForward())
+
+			if angleToTarget < smallestAngle then
+				smallestAngle = angleToTarget
+				targetfinal = target
+			end
+		end
+
+		self:SetNW2Entity( "LockedTarget", targetfinal )
+		self.lockedTarget = targetfinal
+	end
+end
+
 if CLIENT then
+	function SWEP:Think()
+		self.lockedTarget = self:GetNW2Entity( "LockedTarget" )
+	end
+
+	local SY = ScrH()
+	local SX = ScrW()
+
 	function SWEP:GetViewAim()
 		return self.AimTable[self:GetNW2Int("aimsetting",1)]
+	end
+
+	function SWEP:DrawHUD()
+		if self:GetOwner():IsOnGround() and self:GetOwner():GetVelocity():Length() <= 20 and (CurTime() - self.LastShot) >= self.Primary.Delay then
+			surface.SetTextColor( 0, 255, 0, 255 ) -- Set text color
+		elseif self.MissileInFlight then
+			surface.SetTextColor( 255, 255, 0, 255) -- Set text color
+		else
+			surface.SetTextColor( 255, 0, 0, 255) -- Set text color
+		end
+
+		surface.SetTextPos( SX / 2 + 50, SY / 2 + 50 ) -- Set text position, top left corner
+		surface.SetFont( "HL2MPTypeDeath" ) -- Set the font
+		surface.DrawText( "3" ) -- Draw the text
+	end
+
+	function SWEP:DoDrawCrosshair(x,y)
+		local AimMod = self:GetAimMod()
+		local Spread = self.Spread
+		local SpreadAmt = Spread * AimMod
+		if self.CrosshairScale then SpreadAmt = math.max(self.CrosshairScale * AimMod,self.Spread) end
+		local ViewSpread = Vector(100,0,0)
+		ViewSpread:Rotate(Angle(SpreadAmt,0,0))
+		ViewSpread:Rotate(EyeAngles())
+
+		local locksize = 25
+		local xT
+		local yT
+
+		if self.lockedTarget and IsValid(self.lockedTarget) then
+			print("target lol")
+			xT = self.lockedTarget:GetPos():ToScreen().x
+			yT = self.lockedTarget:GetPos():ToScreen().y
+		else
+			xT = x
+			yT = y
+		end
+
+		surface.SetDrawColor(255,255,255)
+		surface.DrawLine(xT + locksize, yT + locksize, xT + locksize, yT + locksize * 0.75)
+		surface.DrawLine(xT + locksize, yT - locksize, xT + locksize, yT - locksize * 0.75)
+		surface.DrawLine(xT - locksize, yT + locksize, xT - locksize, yT + locksize * 0.75)
+		surface.DrawLine(xT - locksize, yT - locksize, xT - locksize, yT - locksize * 0.75)
+
+		surface.DrawLine(xT + locksize, yT + locksize, xT + locksize * 0.75, yT + locksize)
+		surface.DrawLine(xT + locksize, yT - locksize, xT + locksize * 0.75, yT - locksize)
+		surface.DrawLine(xT - locksize, yT + locksize, xT - locksize * 0.75, yT + locksize)
+		surface.DrawLine(xT - locksize, yT - locksize, xT - locksize * 0.75, yT - locksize)
+
+		return true
 	end
 end
