@@ -237,38 +237,43 @@ function ENT:Think()
 				end
 			end
 
-			local Targets = ACF.GetEntitiesInCone(Position, self:GetForward(), self.ViewConeAng)
-			local closestDistPrevTarget = nil
+			if self.HeatTarget and IsValid(self.HeatTarget) then
+				if (self.HeatTarget:GetPos() - Position):GetNormalized():Dot(self:GetForward()) > self.ViewCone then self.HeatTarget = nil end
+			end
 
-			for Entity in pairs(Targets) do
-				local EntPos = Entity:GetPos()
-				local DistanceToLastTarget = nil
+			if not self.HeatTarget then
+				local Targets = ACF.GetEntitiesInCone(Position, self:GetForward(), self.ViewConeAng)
+				local closestDistPrevTarget = nil
 
-				local Direction = (EntPos - Position):GetNormalized()
-				if Direction:Dot(self:GetForward()) > self.ViewCone then
-					local LOSTraceData = {
-						start = Position,
-						endpos = EntPos - Direction * 500,
-						filter = {self, self:GetOwner(), Entity},
-					}
+				for Entity in pairs(Targets) do
+					local EntPos = Entity:GetPos()
+					local DistanceToLastTarget = nil
 
-					if not util.TraceLine( LOSTraceData ).Hit then
-						if self.HeatTarget and IsValid(self.HeatTarget) then
-							DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
-						else
-							self.HeatTarget = Entity
-							DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
-						end
+					local Direction = (EntPos - Position):GetNormalized()
+					if Direction:Dot(self:GetForward()) > self.ViewCone then
+						local LOSTraceData = {
+							start = Position,
+							endpos = EntPos - Direction * 500,
+							filter = {self, self:GetOwner(), Entity},
+						}
 
-						if closestDistPrevTarget == nil or DistanceToLastTarget < closestDistPrevTarget then
-							closestDistPrevTarget = DistanceToLastTarget
-							self.HeatTarget = Entity
-							DistanceToTarget = self:GetPos():Distance(EntPos)
-							Target = Entity:GetPos() + Entity:GetVelocity() * DistanceToTarget / 4000 + Vector(0,0,50)
+						if not util.TraceLine( LOSTraceData ).Hit then
+							if self.HeatTarget and IsValid(self.HeatTarget) then
+								DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
+							else
+								self.HeatTarget = Entity
+								DistanceToLastTarget = self.HeatTarget:GetPos():Distance(EntPos)
+							end
+
+							if closestDistPrevTarget == nil or DistanceToLastTarget < closestDistPrevTarget then
+								closestDistPrevTarget = DistanceToLastTarget
+								self.HeatTarget = Entity
+								DistanceToTarget = self:GetPos():Distance(EntPos)
+								Target = Entity:GetPos() + Entity:GetVelocity() * DistanceToTarget / 4000 + Vector(0,0,50)
+							end
 						end
 					end
 				end
-
 			end
 		elseif self.Owner:Alive() and CanSee and self.Owner:GetActiveWeapon() == self.Weapon then
 			if Target == nil then
@@ -300,7 +305,7 @@ function ENT:Think()
 			end
 		end
 
-		if Target != nil then 
+		if Target != nil then
 			local Expected    = (Target - Position):GetNormalized():Angle()
 			local Current     = self.Velocity:GetNormalized():Angle()
 			local _, LocalAng = WorldToLocal(Target, Expected, Position, Current)
