@@ -263,7 +263,6 @@ if CLIENT then
 		local yT
 
 		if self.lockedTarget and IsValid(self.lockedTarget) then
-			print("target lol")
 			xT = self.lockedTarget:GetPos():ToScreen().x
 			yT = self.lockedTarget:GetPos():ToScreen().y
 		else
