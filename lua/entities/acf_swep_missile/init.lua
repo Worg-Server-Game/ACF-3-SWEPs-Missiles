@@ -85,7 +85,7 @@ function MakeACF_SWEPATGM(Gun, BulletData, EnableGuidance, HeatSeeking, HeatTarg
 
 	ParticleEffectAttach("Rocket Motor GLATGM", 4, Entity, 1)
 
-	Entity.Owner        = Owner
+	Entity:SetOwner(Owner)
 	Entity.Name         = Caliber .. "mm SWEP Launched Missile"
 	Entity.ShortName    = Caliber .. "mmSLATGM"
 	Entity.EntType      = "SWEP Launched Anti-Tank Guided Missile"
