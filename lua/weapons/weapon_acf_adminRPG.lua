@@ -41,34 +41,35 @@ SWEP.Primary.Delay          = 1
 
 // copy paste values that the command puts in console to replace these to make your own custom thing
 
-SWEP.ACFHEATStandoff = 0.016283185824267
-SWEP.ACFHEATBreakupDist = 0.35898786146991
-SWEP.ACFHEATJetMass = 8.6639858153785
-SWEP.Caliber = 380
-SWEP.FillerMass = 5000
-SWEP.ACFHEATBreakupTime = 6.1857630030215e-05
-SWEP.ACFType = "HEATFS"
-SWEP.LimitVel = 0.1
-SWEP.ACFHEATCartMass = 64.360832275829
-SWEP.ACFHEATBoomFillerMass = 14.598161478422
-SWEP.ACFHEATRoundVolume = 69181.011824701
-SWEP.ACFHEATLinerMass = 15.052530734696
-SWEP.ACFHEATJetMinVel = 3277.5412738015
-SWEP.ACFHEATJetMaxVel = 5803.4532085137
-SWEP.ACFProjMass = 63.283423075281
-SWEP.ACFHEATPropMass = 1.0774092005486
-SWEP.ACFMuzzleVel = 191.32185745702
-SWEP.Tracer = 0
-SWEP.ACFHEATCasingMass = 15.302708554672
-
+SWEP.ACFBulletData = {
+	Standoff = 0.016283185824267,
+	BreakupDist = 0.35898786146991,
+	JetMass = 8.6639858153785,
+	Caliber = 380,
+	FillerMass = 5000,
+	BreakupTime = 6.1857630030215e-05,
+	Type = "HEATFS",
+	LimitVel = 0.1,
+	CartMass = 64.360832275829,
+	BoomFillerMass = 14.598161478422,
+	RoundVolume = 69181.011824701,
+	LinerMass = 15.052530734696,
+	JetMinVel = 3277.5412738015,
+	JetMaxVel = 5803.4532085137,
+	ACFProjMass = 63.283423075281,
+	PropMass = 1.0774092005486,
+	MuzzleVel = 191.32185745702,
+	Tracer = 0,
+	CasingMass = 15.302708554672,
+}
 
 // END OF COPY PASTE DATA
 
-SWEP.dropMultiplier 		= 5
-SWEP.ACFMuzzleVel 			= 0.1
-SWEP.LimitVel 				= 0.1
-SWEP.BurnDuration 			= 0.5
-SWEP.Agility 				= 250
+SWEP.ACFBulletData.dropMult	 	= 5
+SWEP.ACFBulletData.MuzzleVel 	= 0.1
+SWEP.ACFBulletData.LimitVel 	= 0.1
+SWEP.ACFBulletData.BurnDuration = 0.5
+SWEP.ACFBulletData.Agility 		= 250
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0
@@ -122,44 +123,18 @@ function SWEP:PrimaryAttack()
 		local Spread = randUnitSquare:GetNormalized() * Cone * (math.random() ^ (1 / ACF.GunInaccuracyBias))
 		local Dir = (Aim + Spread):GetNormalized()
 
-		--self:ShootBullet(Ply:GetShootPos(),(Dir:Angle() + Angle(self.AimTable[self:GetNW2Int("aimsetting",1)].PitchAdjust,0,0)):Forward())
+		local BulletData = self.ACFBulletData
 
-		local BulletData = {
-			MuzzleVel 		= 0, 
-			Caliber 		= self.Caliber, 
-			Pos 			= Ply:GetShootPos() + Aim * 35 + Right * 10, 
-			ProjMass 		= self.ACFProjMass, 
-			PropMass 		= 0,
-			Flight 			= Dir,
-			Speed 			= 0,
-			Filter 			= {},
-			DragCoef 		= ((3.1416 * (self.Caliber / 2) ^ 2) / 10000) / self.ACFProjMass,
-			CartMass 		= self.ACFHEATCartMass,
-			Type 			= self.ACFType,
-			FillerMass 		= self.FillerMass,
-			BoomFillerMass 	= self.ACFHEATBoomFillerMass,
-			CasingMass 		= self.ACFHEATCasingMass,
-			DetonatorAngle 	= self.ACFHEATDetAngle,
-			Standoff 		= self.ACFHEATStandoff,
-			LinerMass 		= self.ACFHEATLinerMass,
+		BulletData.Pos 				= Ply:GetShootPos() + Aim * 35 + Right * 10
+		BulletData.Flight 			= Dir
+		BulletData.Speed 			= self.ACFBulletData.MuzzleVel
+		BulletData.Filter 			= {self:GetOwner()}
+		BulletData.DragCoef 		= ((3.1416 * (self.ACFBulletData.Caliber / 2) ^ 2) / 10000) / self.ACFProjMass
 
-			JetMass 		= self.ACFHEATJetMass,
-			JetMinVel 		= self.ACFHEATJetMinVel,
-			JetMaxVel 		= self.ACFHEATJetMaxVel,
-			RoundVolume 	= self.ACFHEATRoundVolume,
-			BreakupDist 	= self.ACFHEATBreakupDist,
-			BreakupTime 	= self.ACFHEATBreakupTime,
-			Agility 		= self.Agility,
+		BulletData.Diameter 		= self.ACFBulletData.Caliber
+		BulletData.Ricochet 		= 1000
 
-			LimitVel 		= 500,
-			BurnDuration 	= 0,
-			DropMult        = self.dropMultiplier * 3,
-
-			Diameter 		= Caliber,
-			Ricochet 		= 1000, // this is the ricochet angle in degrees, we dont want these to ricochet
-		}
-
-		local missile = MakeACF_SWEPATGM(self, BulletData, true)
+		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance)
 	else
 		self:Recoil(Punch)
 	end

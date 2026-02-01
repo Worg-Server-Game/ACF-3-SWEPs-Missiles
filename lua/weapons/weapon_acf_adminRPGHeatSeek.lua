@@ -5,8 +5,8 @@ include("weapon_acf_HL2RPG.lua")
 local ACF        			= ACF
 
 SWEP.Base               	= "weapon_acf_hl2rpg"
-SWEP.PrintName          	= "ACF Anti Aircraft Rocket Launcher"
-SWEP.Category           	= "ACF-3 SWEPs"
+SWEP.PrintName          	= "ACF Regular AA RPG"
+SWEP.Category           	= "Other"
 SWEP.Author             	= "Duck called Aaronimus"
 
 SWEP.IconOffset				= Vector(4,-4,0)
@@ -27,7 +27,7 @@ SWEP.Slot               	= 4
 SWEP.SlotPos            	= 0
 
 SWEP.Spawnable          	= true
-SWEP.AdminOnly          	= false
+SWEP.AdminOnly          	= true
 
 SWEP.m_WeaponDeploySpeed	= 1
 SWEP.Spread             	= 0.125
@@ -44,36 +44,35 @@ SWEP.Primary.Delay      	= 1
 
 // copy paste values that the command puts in console to replace these to make your own custom thing
 
-SWEP.ACFBulletData = {
-	Standoff = 0.0059731615869846,
-	BreakupDist = 0.048520055885002,
-	JetMass = 0.048556865958908,
-	Caliber = 70.0000378,
-	FillerMass = 2.3675996129365,
-	BreakupTime = 1.1994035199933e-05,
-	Type = "HEAT",
-	LimitVel = 75,
-	BoomFillerMass = 1.0496358284019,
-	RoundVolume = 4079.3624663942,
-	LinerMass = 0.094361520891806,
-	JetMinVel = 2102.4564270258,
-	JetMaxVel = 4045.3487984824,
-	CartMass = 11.002605809159,
-	PropMass = 1.4624129596508,
-	ProjMass = 9.5401928495085,
-	MuzzleVel = 574.0842954945,
-	Tracer = 0,
-	CasingMass = 7.0782317156802,
-}
+SWEP.ACFHEATStandoff = 0.0059731615869846
+SWEP.ACFHEATBreakupDist = 0.048520055885002
+SWEP.ACFHEATJetMass = 0.048556865958908
+SWEP.Caliber = 70.0000378
+SWEP.FillerMass = 2.3675996129365
+SWEP.ACFHEATBreakupTime = 1.1994035199933e-05
+SWEP.ACFType = "HEAT"
+SWEP.LimitVel = 75
+SWEP.ACFHEATBoomFillerMass = 1.0496358284019
+SWEP.ACFHEATRoundVolume = 4079.3624663942
+SWEP.ACFHEATLinerMass = 0.094361520891806
+SWEP.ACFHEATJetMinVel = 2102.4564270258
+SWEP.ACFHEATJetMaxVel = 4045.3487984824
+SWEP.ACFHEATCartMass = 11.002605809159
+SWEP.ACFHEATPropMass = 1.4624129596508
+SWEP.ACFProjMass = 9.5401928495085
+SWEP.ACFMuzzleVel = 574.0842954945
+SWEP.Tracer = 0
+SWEP.ACFHEATCasingMass = 7.0782317156802
+
 
 // END OF COPY PASTE DATA
 
-SWEP.ACFBulletData.MuzzleVel	 		= 50
-SWEP.ACFBulletData.LimitVel 			= 2500
-SWEP.ACFBulletData.BurnDuration 		= 0.5
-SWEP.ACFBulletData.dropMult				= 1
-SWEP.ACFBulletData.Agility 				= 15
-SWEP.ACFBulletData.EnableGuidance 		= true
+SWEP.ACFMuzzleVel 			= 50
+SWEP.LimitVel 				= 2500
+SWEP.BurnDuration 			= 0.5
+SWEP.dropMultiplier 		= 1
+SWEP.Agility 				= 15
+SWEP.EnableGuidance 		= true
 
 SWEP.IronScale              = 0
 SWEP.NextIronToggle         = 0
@@ -137,7 +136,7 @@ function SWEP:PrimaryAttack()
 
 		BulletData.Pos 				= Ply:GetShootPos() + Aim * 35 + Right * 10
 		BulletData.Flight 			= Dir
-		BulletData.Speed 			= self.MuzzleVel
+		BulletData.Speed 			= self.ACFBulletData.MuzzleVel
 		BulletData.Filter 			= {self:GetOwner()}
 		BulletData.DragCoef 		= ((3.1416 * (self.ACFBulletData.Caliber / 2) ^ 2) / 10000) / self.ACFProjMass
 

@@ -51,7 +51,7 @@ local AdditionalString = {
 function getDataFromAmmo(ply)
     Ammo = ply:GetEyeTrace().Entity
 
-    if not Ammo:IsValid() then 
+    if not Ammo:IsValid() then
         print("Youre not looking at a valid entity")
         return
     end
