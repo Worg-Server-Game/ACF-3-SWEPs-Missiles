@@ -143,7 +143,7 @@ function SWEP:PrimaryAttack()
 		BulletData.Diameter 		= self.ACFBulletData.Caliber
 		BulletData.Ricochet 		= 1000
 
-		local missile = MakeACF_SWEPATGM(self, BulletData, self.EnableGuidance, true, self.lockedTarget)
+		local missile = MakeACF_SWEPATGM(self, BulletData, self.ACFBulletData.EnableGuidance, true, self.lockedTarget)
 
 	else
 		self:Recoil(Punch)
