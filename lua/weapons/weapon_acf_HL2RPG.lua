@@ -42,27 +42,95 @@ SWEP.Primary.Delay      	= 1
 
 // copy paste values that the command puts in console to replace these to make your own custom thing
 
-SWEP.ACFBulletData = {
-	Standoff = 0.053408042740902,
-	BreakupDist = 0.1679506698103,
-	JetMass = 0.18322749777791,
-	Caliber = 100,
-	FillerMass = 3.1087092916811,
-	BreakupTime = 2.8560195886167e-05,
-	Type = "HEAT",
-	LimitVel = 100,
-	CartMass = 9.5278027622955,
-	BoomFillerMass = 1.595804103063,
-	RoundVolume = 6283.1853071796,
-	LinerMass = 0.29285162138186,
-	JetMinVel = 3550.8238511925,
-	JetMaxVel = 5880.5853601181,
-	ProjMass = 9.1547386346817,
-	PropMass = 0.37306412761379,
-	MuzzleVel = 295.99747105103,
-	Tracer = 0,
-	CasingMass = 5.7531777216188,
+--[[
 
+Standoff = 0.037938310440573
+BreakupDist = 0.079841991796093
+Id = SPG-9 ASR
+JetMass = 0.045337000257641
+Efficiency = 1
+Caliber = 7.300003942
+FillerMass = 0.48009426850769
+CanFuze = true
+Priority = Projectile
+BreakupTime = 9.8148161665476e-06
+Type = HEAT
+JetAvgVel = 6512.4146132219
+DragCoef = 0.0011842335032365
+LimitVel = 100
+CartMass = 6.2300724421696
+MinConeAng = 12.471073029901
+MissileStandoff = 33.3
+FillerMul = 1.06
+Crate = 873
+RoundVolume = 3677.7033642754
+LinerMass = 0.20524430189393
+JetMinVel = 4824.0928327928
+Diameter = 7.300003942
+LinerMassMul = 2.8
+DetonatorAngle = 75
+JetMaxVel = 8134.8433267883
+ShovePower = 0.1
+FillerEnergy = 961406.09276979
+CasingMass = 2.9808660797091
+Tracer = 0
+Ricochet = 60
+PropLength = 67.8
+PropMass = 2.6958105575621
+MuzzleVel = 1280.6031074398
+ProjArea = 41.85391332964
+ProjMass = 3.5342618846075
+BoomFillerMass = 0.21284179237174
+ConeAng = 44.22
+ProjLength = 20.07
+PropArea = 41.85391332964
+PenMul = 2.273
+
+]]
+
+
+
+SWEP.ACFBulletData = {
+	Standoff = 0.037938310440573,
+	BreakupDist = 0.079841991796093,
+	JetMass = 0.045337000257641,
+	Efficiency = 1,
+	Caliber = 7.300003942,
+	FillerMass = 0.48009426850769,
+	CanFuze = true,
+	Priority = "Projectile",
+	BreakupTime = 9.8148161665476e-06,
+	Type = "HEAT",
+	JetAvgVel = 6512.4146132219,
+	DragCoef = 0.0011842335032365,
+	LimitVel = 100,
+	CartMass = 6.2300724421696,
+	MinConeAng = 12.471073029901,
+	MissileStandoff = 33.3,
+	FillerMul = 1.06,
+	Crate = 873,
+	RoundVolume = 3677.7033642754,
+	LinerMass = 0.20524430189393,
+	JetMinVel = 4824.0928327928,
+	Diameter = 7.300003942,
+	LinerMassMul = 2.8,
+	DetonatorAngle = 75,
+	JetMaxVel = 8134.8433267883,
+	ShovePower = 0.1,
+	FillerEnergy = 961406.09276979,
+	CasingMass = 2.9808660797091,
+	Tracer = 0,
+	Ricochet = 60,
+	PropLength = 67.8,
+	PropMass = 2.6958105575621,
+	MuzzleVel = 1280.6031074398,
+	ProjArea = 41.85391332964,
+	ProjMass = 3.5342618846075,
+	BoomFillerMass = 0.21284179237174,
+	ConeAng = 44.22,
+	ProjLength = 20.07,
+	PropArea = 41.85391332964,
+	PenMul = 2.273,
 }
 
 // END OF COPY PASTE DATA
@@ -130,7 +198,7 @@ function SWEP:PrimaryAttack()
 		local Spread = randUnitSquare:GetNormalized() * Cone * (math.random() ^ (1 / ACF.GunInaccuracyBias))
 		local Dir = (Aim + Spread):GetNormalized()
 
-		local BulletData = self.ACFBulletData
+		local BulletData = table.Copy(self.ACFBulletData)
 
 		BulletData.Pos 				= Ply:GetShootPos() + Aim * 35 + Right * 10
 		BulletData.Flight 			= Dir

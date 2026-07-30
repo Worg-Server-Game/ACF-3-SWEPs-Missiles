@@ -108,7 +108,7 @@ function SWEP:SecondaryAttack()
 		if Ply:IsNPC() then Aim = Ply:GetAimVector() end
 
 		for i = 1, 15 do
-			local Dir = (self:GetOwner():EyeAngles() + Angle( math.random(-1, 1), math.random(-2, 2), 0 ) * 3):Forward()
+			local Dir = (self:GetOwner():EyeAngles() + Angle( math.random(-1.5, 1.5), math.random(-2.5, 2.5), 0 ) * 3):Forward()
 
 			self:ShootBullet(Ply:GetShootPos(),Dir)
 		end

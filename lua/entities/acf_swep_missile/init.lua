@@ -11,11 +11,8 @@ local AmmoTypes  = ACF.Classes.AmmoTypes
 local Damage     = ACF.Damage
 local Clock      = ACF.Utilities.Clock
 local TraceData  = { start = true, endpos = true, filter = true }
-local ZERO       = Vector()
-local Classes    = ACF.Classes
 local Debug		 = ACF.Debug
 local Objects    = Damage.Objects
-local Guidances  = ACF.Classes.Guidances
 
 local function CheckViewCone(Missile, HitPos)
 	local Position = Missile.Position
@@ -130,12 +127,12 @@ function MakeACF_SWEPATGM(Gun, BulletData, EnableGuidance, HeatSeeking, HeatTarg
 	if IsValid(PhysObj) then
 		PhysObj:EnableGravity(false)
 		PhysObj:EnableMotion(false)
-		PhysObj:SetMass(Entity.ForcedMass)
+		PhysObj:SetMass(25)
 	end
 
 	ACF.Activate(Entity)
 
-	Missiles[Entity] = true -- no clue what this line does, just copied from ACF-3-Missiles, doesnt seem useful
+	Missiles[Entity] = true -- no clue what this line does, just copied from ACF-3-Missiles, doesnt seem useful but its here
 
 	hook.Run("ACF_OnLaunchMissile", Entity)
 
@@ -210,17 +207,13 @@ function ENT:Think()
 	end
 
 	local DeltaTime = Time - self.LastThink
-	local CanGuide  = self.GuideDelay <= Time
-	local Computer  = self.Owner:GetActiveWeapon()
-	local CanSee    = CheckViewCone(self, self.Owner:GetEyeTrace().HitPos)
+	local CanSee    = CheckViewCone(self, self:GetOwner():GetEyeTrace().HitPos)
 	local Position  = self.Position
 	local NextDir, NextAng
 
 	self.Speed = math.min(self.LaunchVel + self.DiffVel * math.Clamp(1 - (self.AccelTime - Time) / self.AccelLength, 0, 1), self.LimitVel)
 
 	if self.UseGuidance then
-		local Origin   = self.Owner:EyePos()
-		local Distance = Origin:Distance(Position) + self.Speed * 0.15
 		local Target   = nil
 
 		if self.HeatSeeking then
@@ -229,6 +222,10 @@ function ENT:Think()
 			for Entity in pairs(AirBurstTargets) do
 				local EntPos  = Entity:GetPos()
 				local EntDist = EntPos:Distance(Position)
+
+				if Entity != self.AimLockedTarget then
+					continue
+				end
 
 				if EntDist > 500 then continue end
 
@@ -275,9 +272,9 @@ function ENT:Think()
 					end
 				end
 			end
-		elseif self.Owner:Alive() and CanSee and self.Owner:GetActiveWeapon() == self.Weapon then
+		elseif self:GetOwner():Alive() and CanSee and self:GetOwner():GetActiveWeapon() == self.Weapon then
 			if Target == nil then
-				Target = self.Owner:GetEyeTrace().HitPos
+				Target = self:GetOwner():GetEyeTrace().HitPos
 			end
 		end
 
@@ -289,7 +286,6 @@ function ENT:Think()
 				if EntPos:Distance(Position) < 250 then
 					self:Detonate(nil, true)
 				end
-				local DistanceToTarget = nil
 				local Direction = (EntPos - Position):GetNormalized()
 				if Direction:Dot(self:GetForward()) > self.ViewCone then
 					local LOSTraceData = {
@@ -387,7 +383,7 @@ function ENT:Detonate(Destroyed, AirBurst)
 
 	local PhysObj = self:GetPhysicsObject()
 	local BulletData = self.BulletData
-	local Fuze = self.FuzeData
+
 	self:SetNotSolid(true)
 	self:SetNoDraw(true)
 
@@ -426,13 +422,15 @@ function ENT:Detonate(Destroyed, AirBurst)
 	local Fragments = BulletData.CasingMass
 	local DmgInfo   = Objects.DamageInfo(BulletData.Owner, BulletData.Gun)
 
-	Damage.explosionEffect(self:GetPos(), self:GetForward(), Filler / 15)
+	
 	if not AirBurst then
 		local Bullet = Ballistics.CreateBullet(BulletData)
 		Bullet.Owner = self:GetOwner()
 		AmmoTypes.Get(BulletData.Type):Detonate(Bullet, self:GetPos())
+		Damage.explosionEffect(self:GetPos(), self:GetForward(), Filler / 100)
 	else
-		Damage.createExplosion(self:GetPos(), Filler, Fragments, nil, DmgInfo)
+		Damage.createExplosion(self:GetPos(), Filler * 2, Fragments, nil, DmgInfo)
+		Damage.explosionEffect(self:GetPos(), self:GetForward(), Filler / 5)
 	end
 
 end
@@ -441,4 +439,8 @@ function ENT:OnRemove()
 	Missiles[self] = nil
 
 	WireLib.Remove(self)
+end
+
+function ENT:GravGunPickupAllowed(ply)
+	return true
 end

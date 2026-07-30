@@ -3,7 +3,7 @@ AddCSLuaFile()
 include("weapon_acf_base.lua")
 
 SWEP.Base                   = "weapon_acf_base"
-SWEP.PrintName              = "ACF Anti-Material Rifle"
+SWEP.PrintName              = "ACF Anti-Materiel Rifle"
 SWEP.Category               = "ACF-3 SWEPs"
 
 SWEP.IconOffset				= Vector(4,4,0)

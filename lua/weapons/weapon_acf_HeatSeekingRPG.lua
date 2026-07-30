@@ -39,10 +39,10 @@ SWEP.Primary.Ammo       	= "RPG_round"
 SWEP.Primary.Automatic  	= false
 SWEP.Primary.Delay      	= 1
 
-// you can get this data by typing "acf_sweps_getDataFromAmmo" in console while looking at a GLATGM ammo box
-// calibers lower than 100mm do not suffer from horrible inaccuracy
+-- you can get this data by typing "acf_sweps_getDataFromAmmo" in console while looking at a GLATGM ammo box
+-- calibers lower than 100mm do not suffer from horrible inaccuracy
 
-// copy paste values that the command puts in console to replace these to make your own custom thing
+-- copy paste values that the command puts in console to replace these to make your own custom thing
 
 SWEP.ACFBulletData = {
 	Standoff = 0.0059731615869846,
@@ -66,7 +66,7 @@ SWEP.ACFBulletData = {
 	CasingMass = 7.0782317156802,
 }
 
-// END OF COPY PASTE DATA
+-- END OF COPY PASTE DATA
 
 SWEP.ACFBulletData.MuzzleVel	 		= 50
 SWEP.ACFBulletData.LimitVel 			= 2500
@@ -186,7 +186,19 @@ if SERVER then
 		for target in pairs(Targets) do
 			if not target then continue end
 
-			local angleToTarget = (target:GetPos() - self:GetOwner():GetPos()):GetNormal():Dot(self:GetOwner():GetForward())
+			local targetPos = target:GetPos()
+			local shootPos = self:GetOwner():EyePos()
+			local Direction = (targetPos - shootPos):GetNormal()
+
+			local LOSTraceData = {
+				start = shootPos,
+				endpos = targetPos - Direction * 500,
+				filter = {self, self:GetOwner(), target},
+			}
+
+			if util.TraceLine( LOSTraceData ).Hit then continue end
+
+			local angleToTarget = Direction:GetNormal():Dot(self:GetOwner():GetForward())
 
 			if angleToTarget < smallestAngle then
 				smallestAngle = angleToTarget
@@ -239,8 +251,8 @@ if CLIENT then
 		local yT
 
 		if self.lockedTarget and IsValid(self.lockedTarget) then
-			xT = self.lockedTarget:GetPos():ToScreen().x
-			yT = self.lockedTarget:GetPos():ToScreen().y
+			xT = (self.lockedTarget:GetPos() + Vector(0, 0, 50)):ToScreen().x
+			yT = (self.lockedTarget:GetPos() + Vector(0, 0, 50)):ToScreen().y
 		else
 			xT = x
 			yT = y
