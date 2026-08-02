@@ -296,7 +296,7 @@ function ENT:Think()
 				if Bullet.Type != "FLR" then continue end
 				if Bullet.FlareObj.Flare.CreateTime > Clock.CurTime then continue end
 				local EntPos = Bullet.Pos
-				if EntPos:Distance(Position) < 250 then
+				if EntPos:Distance(Position) < 1500 then
 					self:Detonate(nil, true)
 				end
 				local DistanceToTarget = nil
@@ -358,6 +358,16 @@ function ENT:Think()
 		self:SetPos(Result.HitPos)
 
 		return self:Detonate()
+	end
+
+	TraceData.start  = Position
+	TraceData.endpos = self.Position + self.Velocity:GetNormal() * 1000
+	TraceData.filter = self.Filter
+
+	if Result.Hit then
+		self:SetPos(Result.HitPos)
+
+		return self:Detonate(nil, true)
 	end
 
 	self:SetPos(self.Position)
